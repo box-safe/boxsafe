@@ -1,0 +1,13 @@
+{
+	"nodes":[
+		{"id":"6e6a5693f6dcabec","x":-500,"y":-60,"width":280,"height":50,"type":"text","text":"# boxsaf.config.ts\n"},
+		{"id":"df71e72a4a23222e","x":-80,"y":-60,"width":100,"height":50,"type":"text","text":"routes"},
+		{"id":"adcb136eecd914ad","x":120,"y":-240,"width":180,"height":50,"type":"text","text":"without sandbox"},
+		{"id":"68b5221bff3747e2","x":420,"y":-240,"width":96,"height":50,"type":"text","text":"loop"}
+	],
+	"edges":[
+		{"id":"b4ab4571095bd3bb","fromNode":"6e6a5693f6dcabec","fromSide":"right","toNode":"df71e72a4a23222e","toSide":"left"},
+		{"id":"dc8d4bc098c40aa5","fromNode":"df71e72a4a23222e","fromSide":"right","toNode":"adcb136eecd914ad","toSide":"left"},
+		{"id":"e9b4791db4891331","fromNode":"adcb136eecd914ad","fromSide":"right","toNode":"68b5221bff3747e2","toSide":"left"}
+	]
+}
