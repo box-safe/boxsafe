@@ -1,59 +1,53 @@
 {
-  "modelSource": "cloud",
+  "ai": {
+    "source": "cloud",
 
-  "localAI": {
-    "useLlama.cpp": false,
-    "Llama.cpp": {
+    "local": {
+      "enabled": false,
+      "endpoint": "http://127.0.0.1:8080",
       "model": "Llama.gguf",
-      "parameters": {}
+      "parameters": {},
+      "limits": {
+        "requests": "infinity"
+      }
     },
-    "url": "http://127.0.0.1:8080",
-    "limit": "infinity"
-  },
 
-  "cloudAI": {
-    "provider": "google",
-    "model": "gemini-2.5-flash",
-    "limit": 10,
-    "expenseControl": {
-      "limit": "infinity",
-      "limitToken": "infinity",
-      "rotateModels": {
-        "rotate": false,
-        "extraModels": [],
-        "maxWithMain": 10,
-        "maxWithExtras": "infinity"
+    "cloud": {
+      "provider": "google",
+      "model": "gemini-2.5-flash",
+      "limits": {
+        "requests": 10,
+        "tokens": "infinity"
+      },
+      "modelRotation": {
+        "enabled": false,
+        "extras": [],
+        "maxMain": 10,
+        "maxExtras": "infinity"
       }
     }
   },
 
-  "withSandbox": false,
-
   "sandbox": {
+    "enabled": false,
+    "engine": "docker",
     "container": {
-      "engine": "docker",
-      "configsBox": {
-        "runRoot": true,
-        "memLimit": "256m",
-        "cpuLimit": 0.3,
-        "network": "none",
-        "containerRuntime": "default",
-        "restartPolicy": "no"
-      }
-    },
-    "withoutBox": {
-      "runRoot": false
+      "root": true,
+      "memory": "256m",
+      "cpu": 0.3,
+      "network": "none",
+      "runtime": "default",
+      "restart": "no"
     }
   },
 
   "commands": {
-    "runCode": ["executable", ["npm", "run", "dev"]],
-    "configEnv": ["npm", "init", "-y"]
+    "run": ["executable", ["npm", "run", "dev"]],
+    "setup": ["npm", "init", "-y"]
   },
 
-  "indicatePath": {
-    "pathRoot": "@",
-    "pathWrite": "@"
+  "paths": {
+    "root": "@",
+    "write": "@"
   }
 }
-

@@ -10,126 +10,68 @@ export type RestartPolicy = "no" | "always"
 export type LlamaModel = string
 export type LlamaParameters = Record<string, never>
 
-export type LlamaSettings = {
-model:LlamaModel
-parameters:LlamaParameters
+export type LocalAIConfig = {
+  enabled: boolean
+  endpoint: string
+  model: LlamaModel
+  parameters: LlamaParameters
+  limits: {
+    requests: Limit
+  }
 }
 
-export type LocalAIFlags = {
-"useLlama.cpp":boolean
+export type ModelRotationConfig = {
+  enabled: boolean
+  extras: string[]
+  maxMain: number
+  maxExtras: Limit
 }
 
-export type LocalAIEndpoint = {
-url:string
-limit:Limit
+export type CloudAIConfig = {
+  provider: CloudProvider
+  model: string
+  limits: {
+    requests: number
+    tokens: Limit
+  }
+  modelRotation: ModelRotationConfig
 }
 
-export type LocalAIModel = {
-"Llama.cpp":LlamaSettings
+export type ContainerConfig = {
+  root: boolean
+  memory: string
+  cpu: number
+  network: NetworkMode
+  runtime: ContainerRuntime
+  restart: RestartPolicy
 }
 
-export type ModelRotationLimits = {
-maxWithMain:number
-maxWithExtras:Limit
-}
-
-export type ModelRotationFlags = {
-rotate:boolean
-}
-
-export type ModelRotationModels = {
-extraModels:string[]
-}
-
-export type ModelRotation = ModelRotationFlags & ModelRotationModels & ModelRotationLimits
-
-export type ExpenseLimits = {
-limit:Limit
-limitToken:Limit
-}
-
-export type ExpenseControl = ExpenseLimits & {
-rotateModels:ModelRotation
-}
-
-export type CloudModel = {
-model:string
-limit:number
-}
-
-export type CloudProviderConfig = {
-provider:CloudProvider
-}
-
-export type CloudAIConfigShape = CloudProviderConfig & CloudModel & {
-expenseControl:ExpenseControl
-}
-
-export type ContainerResources = {
-memLimit:string
-cpuLimit:number
-}
-
-export type ContainerRuntimeConfig = {
-network:NetworkMode
-containerRuntime:ContainerRuntime
-restartPolicy:RestartPolicy
-}
-
-export type ContainerSecurity = {
-runRoot:boolean
-}
-
-export type ContainerConfigsShape = ContainerResources & ContainerRuntimeConfig & ContainerSecurity
-
-export type ContainerEngineConfig = {
-engine:ContainerEngine
-}
-
-export type ContainerConfigShape = ContainerEngineConfig & {
-configsBox:ContainerConfigsShape
-}
-
-export type SandboxNativeConfig = {
-runRoot:boolean
-}
-
-export type SandboxConfigShape = {
-container:ContainerConfigShape
-withoutBox:SandboxNativeConfig
+export type SandboxConfig = {
+  enabled: boolean
+  engine: ContainerEngine
+  container: ContainerConfig
 }
 
 export type CommandRun = [string, string[]] | string
-export type CommandEnv = string[]
+export type CommandSetup = string[]
 
-export type CommandsShape = {
-runCode:CommandRun
-configEnv:CommandEnv
+export type Commands = {
+  run: CommandRun
+  setup: CommandSetup
 }
 
-export type PathRoot = string
-export type PathWrite = string
-
-export type IndicatePathShape = {
-pathRoot:PathRoot
-pathWrite:PathWrite
-
+export type PathsConfig = {
+  root: string
+  write: string
 }
-
-export interface LocalAIConfig extends LocalAIFlags, LocalAIModel, LocalAIEndpoint {}
-export interface CloudAIConfig extends CloudAIConfigShape {}
-export interface ContainerConfigs extends ContainerConfigsShape {}
-export interface ContainerConfig extends ContainerConfigShape {}
-export interface SandboxConfig extends SandboxConfigShape {}
-export interface Commands extends CommandsShape {}
-export interface IndicatePath extends IndicatePathShape {}
 
 export interface BoxSafeConfig {
-modelSource:ModelSource
-localAI:LocalAIConfig
-cloudAI:CloudAIConfig
-withSandbox:boolean
-sandbox:SandboxConfig
-commands:Commands
-indicatePath:IndicatePath
+  ai: {
+    source: ModelSource
+    local: LocalAIConfig
+    cloud: CloudAIConfig
+  }
+  sandbox: SandboxConfig
+  commands: Commands
+  paths: PathsConfig
 }
