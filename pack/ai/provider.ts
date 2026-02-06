@@ -12,15 +12,21 @@ interface LLMContract {
   generate(prompt: string): Promise<string>;
 }
 
-type SDKModelFn = (model: string) => Parameters<typeof generateText>[0]["model"];
+type SDKModelFn<M extends LModel> =
+  (model: M) => Parameters<typeof generateText>[0]["model"];
 
 /** SDK model initializers keyed by service */
-const SDK_PROVIDERS: Partial<Record<LService, SDKModelFn>> = {
-  [LService.OPENAI]: (model) => openai(model),
-  [LService.GOOGLE]: (model) => google(model),
+const SDK_PROVIDERS = {
+  [LService.OPENAI]: (model: LModel.GPT) => openai(model),
+  [LService.GOOGLE]: (model: LModel.GEMINI) => google(model),
+} satisfies {
+  [LService.OPENAI]: SDKModelFn<LModel.GPT>;
+  [LService.GOOGLE]: SDKModelFn<LModel.GEMINI>;
 };
 
-function createSDKAdapter(model: Parameters<typeof generateText>[0]["model"]): LLMContract {
+function createSDKAdapter(
+  model: Parameters<typeof generateText>[0]["model"]
+): LLMContract {
   return {
     async generate(prompt: string): Promise<string> {
       const { text } = await generateText({ model, prompt });
@@ -35,15 +41,45 @@ const MOCK_ADAPTER: LLMContract = {
   },
 };
 
+const SERVICE_ADAPTERS = {
+  [LService.OPENAI]: (model: LModel.GPT) =>
+    createSDKAdapter(SDK_PROVIDERS[LService.OPENAI](model)),
+
+  [LService.GOOGLE]: (model: LModel.GEMINI) =>
+    createSDKAdapter(SDK_PROVIDERS[LService.GOOGLE](model)),
+};
+
+// ____________________________________________________________________________
+// ── Factory Function ────────────────────────────────────────────────────────
+export function createLLM(
+  service: LService.MOCK,
+  model: LModel.MOCK
+): LLMContract;
+
+export function createLLM(
+  service: LService.OPENAI,
+  model: LModel.GPT
+): LLMContract;
+
+export function createLLM(
+  service: LService.GOOGLE,
+  model: LModel.GEMINI
+): LLMContract;
+
+export function createLLM(
+  service: LService,
+  model: LModel
+): LLMContract;
+
 export function createLLM(service: LService, model: LModel): LLMContract {
   validateServiceModel(service, model);
 
   if (service === LService.MOCK) return MOCK_ADAPTER;
 
-  const initModel = SDK_PROVIDERS[service];
-  if (!initModel) {
+  const create = SERVICE_ADAPTERS[service];
+  if (!create) {
     throw new Error(`No SDK provider registered for service "${service}"`);
   }
 
-  return createSDKAdapter(initModel(model));
+  return create(model as never);
 }

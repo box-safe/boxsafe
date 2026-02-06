@@ -3,7 +3,7 @@ import path from "path"
 import fs from "fs/promises"
 import type { CommandRun } from "@/types"
 
-const dirLog = path.join(process.cwd(), "memo", "satates-logs")
+const dirLog = path.join(process.cwd(), "memo", "satateslogs")
 const pathLog = path.join(dirLog, "logs.txt")
 
 const run = (command: CommandRun): void => {
@@ -26,7 +26,7 @@ const run = (command: CommandRun): void => {
     write(data.toString())
   })
 
-  child.on("exit", (code, signal) => {
+  child.on("exit", (code, signal) => { // signal codes = SIGTERM, SIGKILL, SIGINT
     write(`\nexitCode=${code} signal=${signal}\n`)
   })
 }

@@ -30,15 +30,15 @@
             "state": {
               "type": "canvas",
               "state": {
-                "file": "diagram.canvas",
+                "file": "prototype.canvas",
                 "viewState": {
-                  "x": 0,
-                  "y": 0,
-                  "zoom": 0
+                  "x": -88.4842728619762,
+                  "y": 171.19385594665297,
+                  "zoom": -0.18717370972186653
                 }
               },
               "icon": "lucide-layout-dashboard",
-              "title": "diagram"
+              "title": "prototype"
             }
           }
         ],
@@ -201,10 +201,10 @@
       "bases:Create new base": false
     }
   },
-  "active": "c24248843ebc5bba",
+  "active": "2a1ad08d28543f47",
   "lastOpenFiles": [
-    "diagram.md",
     "diagram.canvas",
+    "diagram.md",
     "prototype.canvas"
   ]
 }
