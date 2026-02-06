@@ -36,8 +36,10 @@ function createSDKAdapter(
 }
 
 const MOCK_ADAPTER: LLMContract = {
-  async generate(): Promise<string> {
-    return "Mock response";
+  async generate(prompt?: string): Promise<string> {
+    // Return a minimal bash code block so extractCode can find runnable code
+    // This keeps mock behavior useful for testing the loop pipeline.
+    return "```bash\necho \"Mock response\"\n```";
   },
 };
 

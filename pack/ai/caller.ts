@@ -7,7 +7,7 @@
 
 import "dotenv/config";
 import * as path from "path";
-import fs from "fs/promises"
+import fs from "fs/promises";
 import { createLLM } from "@pack/ai/provider";
 import { LService, LModel } from "@pack/ai/label";
 
@@ -23,21 +23,22 @@ const DEFAULT_CONFIG: RunnerConfig = {
   outputPath: "codelog.md",
 };
 
+const RAM_ROOT = "/dev/shm";
+
 const writeOutput = async (filePath: string, data: string): Promise<void> => {
-  const root = process.cwd();
-  const resolved = path.join(root, "memo", "receivercodes", filePath);
+  const resolved = path.join(RAM_ROOT, "receivercodes", filePath);
+
+  await fs.mkdir(path.dirname(resolved), { recursive: true });
   await fs.writeFile(resolved, data, "utf8");
 };
 
-export const run = async (
+export const runLLM = async (
   prompt: string,
   llm: ReturnType<typeof createLLM>,
   config: RunnerConfig = DEFAULT_CONFIG,
-
 ): Promise<void> => {
   const text = await llm.generate(prompt);
   await writeOutput(config.outputPath, text);
 };
-
 
 // ── entry point ──────────────────────────────────────────────────────────────

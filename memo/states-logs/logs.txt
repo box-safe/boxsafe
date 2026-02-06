@@ -1,0 +1,10 @@
+exitCode=0
+signal=none
+timedOut=false
+stdout<<<
+OK
+
+>>>
+stderr<<<
+
+>>>
