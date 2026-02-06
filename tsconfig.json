@@ -8,7 +8,8 @@
       "@/*": ["./*"],
       "@core/*": ["core/*"],
       "@pack/*": ["pack/*"],
-      "@memo/*": ["memo/*"]
+      "@memo/*": ["memo/*"],
+      "@util/*": ["util/*"]
     },
     "allowJs": true,
     "types": ["node"],

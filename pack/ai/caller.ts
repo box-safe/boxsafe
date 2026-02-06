@@ -20,7 +20,7 @@ interface RunnerConfig {
 const DEFAULT_CONFIG: RunnerConfig = {
   service: LService.GOOGLE,
   model: LModel.GEMINI,
-  outputPath: "codelog.txt",
+  outputPath: "codelog.md",
 };
 
 const writeOutput = async (filePath: string, data: string): Promise<void> => {

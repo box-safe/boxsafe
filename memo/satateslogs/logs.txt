@@ -1,3 +1,0 @@
-hello world
-
-exitCode=0 signal=null
