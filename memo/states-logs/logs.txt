@@ -1,10 +1,117 @@
-exitCode=127
+exitCode=0
 signal=none
 timedOut=false
 stdout<<<
+--- Informações de Hardware e Sistema ---
+
+Sistema Operacional:
+  Tipo: Linux
+  Plataforma: linux
+  Release: 6.18.7-zen1-1-zen
+  Arquitetura: x64
+  Hostname: archlinux
+  Uptime do Sistema: 0d 10h 14m 31s
+
+Memória:
+  Total: 13.54 GB
+  Livre: 7.49 GB (55.33% livre)
+
+CPU (Processador):
+  Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+  Velocidade Média (Nominal): 4641 MHz
+  Núcleos Lógicos (Threads): 12
+  Informações por Núcleo:
+    - Núcleo 1:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 4641 MHz
+    - Núcleo 2:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 4641 MHz
+    - Núcleo 3:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 3740 MHz
+    - Núcleo 4:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 4626 MHz
+    - Núcleo 5:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 4641 MHz
+    - Núcleo 6:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 3738 MHz
+    - Núcleo 7:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 4640 MHz
+    - Núcleo 8:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 4641 MHz
+    - Núcleo 9:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 4289 MHz
+    - Núcleo 10:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 4641 MHz
+    - Núcleo 11:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 2390 MHz
+    - Núcleo 12:
+      Modelo: AMD Ryzen 5 5600GT with Radeon Graphics
+      Velocidade: 4164 MHz
+
+Informações de Rede:
+  Adaptador: lo
+    - Família: IPv4
+      Endereço IP: 127.0.0.1
+      Máscara de Sub-rede: 255.0.0.0
+      MAC: 00:00:00:00:00:00
+      Loopback/Interno: Sim
+    - Família: IPv6
+      Endereço IP: ::1
+      Máscara de Sub-rede: ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+      MAC: 00:00:00:00:00:00
+      Loopback/Interno: Sim
+  Adaptador: wlan0
+    - Família: IPv4
+      Endereço IP: 192.168.3.3
+      Máscara de Sub-rede: 255.255.255.0
+      MAC: e8:65:38:93:0f:8b
+      Loopback/Interno: Não
+    - Família: IPv6
+      Endereço IP: 2804:108c:f6de:fd00:2481:c78e:92d:5
+      Máscara de Sub-rede: ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+      MAC: e8:65:38:93:0f:8b
+      Loopback/Interno: Não
+    - Família: IPv6
+      Endereço IP: 2804:108c:f6de:fd00:3ae1:a14f:a253:c241
+      Máscara de Sub-rede: ffff:ffff:ffff:ffff::
+      MAC: e8:65:38:93:0f:8b
+      Loopback/Interno: Não
+    - Família: IPv6
+      Endereço IP: fe80::a607:8869:b486:ed0c
+      Máscara de Sub-rede: ffff:ffff:ffff:ffff::
+      MAC: e8:65:38:93:0f:8b
+      Loopback/Interno: Não
+  Adaptador: br-a2e1c65a2318
+    - Família: IPv4
+      Endereço IP: 172.18.0.1
+      Máscara de Sub-rede: 255.255.0.0
+      MAC: 0e:e0:ea:3f:5b:af
+      Loopback/Interno: Não
+    - Família: IPv6
+      Endereço IP: fe80::ce0:eaff:fe3f:5baf
+      Máscara de Sub-rede: ffff:ffff:ffff:ffff::
+      MAC: 0e:e0:ea:3f:5b:af
+      Loopback/Interno: Não
+  Adaptador: vethf8a49c2
+    - Família: IPv6
+      Endereço IP: fe80::dc1d:86ff:fe1c:8f60
+      Máscara de Sub-rede: ffff:ffff:ffff:ffff::
+      MAC: de:1d:86:1c:8f:60
+      Loopback/Interno: Não
+
+--- Fim das Informações ---
 
 >>>
 stderr<<<
-/bin/sh: line 1: ts-node: command not found
 
 >>>
