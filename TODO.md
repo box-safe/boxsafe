@@ -1,2 +1,2 @@
-1. create extractor for output from ai 
-2. finish building the loop logic 
+1. jogar para roteamento correto
+2. add funcionalidade de reafaturação de codigo ja existe

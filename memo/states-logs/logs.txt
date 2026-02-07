@@ -1,10 +1,10 @@
-exitCode=0
+exitCode=127
 signal=none
 timedOut=false
 stdout<<<
-OK
 
 >>>
 stderr<<<
+/bin/sh: line 1: ts-node: command not found
 
 >>>

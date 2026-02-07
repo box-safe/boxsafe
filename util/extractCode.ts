@@ -54,6 +54,33 @@ function matchesLanguage(target: string, nodeLang?: string): boolean {
 }
 
 /**
+ * Heuristic detection of language from a code snippet when no fence language is provided.
+ * Returns true when the snippet contains tokens commonly associated with `target`.
+ */
+function detectByContent(target: string, code: string): boolean {
+  const c = code || '';
+  switch (target) {
+    case 'typescript':
+    case 'ts':
+    case 'javascript':
+    case 'js':
+      return /\b(import|export|const|let|interface|type|from|require\(|console\.log)\b/.test(c);
+    case 'python':
+    case 'py':
+      return /\b(def |import |from |print\()/.test(c);
+    case 'bash':
+    case 'sh':
+    case 'shell':
+      return /(^#!\/bin\/bash)|(^#!\/usr\/bin\/env bash)|\becho\b|\bcd\b|\bmkdir\b/.test(c);
+    case 'rust':
+    case 'rs':
+      return /\b(fn |let |use |extern crate)\b/.test(c);
+    default:
+      return false;
+  }
+}
+
+/**
  * Generates guidance prompt when code is not found
  */
 function generateNotFoundPrompt(lang: string): string {
@@ -113,8 +140,17 @@ export const extractCode = async (
   const onVisitCode = (node: any) => {
     if (!node?.value) return;
 
+    // Exact match by explicit fence language
     if (matchesLanguage(normalizedLang, node.lang)) {
       codeBlocks.push(node.value.trim());
+      return;
+    }
+
+    // Fallback: if the fence had no language, try to heuristically detect
+    // the requested language from the code content itself.
+    if (!node.lang && detectByContent(normalizedLang, node.value)) {
+      codeBlocks.push(node.value.trim());
+      return;
     }
   };
 
@@ -132,9 +168,36 @@ export const extractCode = async (
         );
       }
 
-      return [
-        customNotFoundMessage ?? generateNotFoundPrompt(lang),
-      ];
+      // Fallback: try to extract unlabeled fenced blocks or raw code from the
+      // entire markdown string when no explicit code nodes were found.
+      // 1) unlabeled/any fenced blocks via regex
+      const fenceRegex = /```(?:\w+)?\n([\s\S]*?)\n```/g;
+      let m: RegExpExecArray | null;
+      while ((m = fenceRegex.exec(md)) !== null) {
+        const candidate = m[1].trim();
+        if (candidate && (detectByContent(normalizedLang, candidate) || normalizedLang === 'ts' || normalizedLang === 'js')) {
+          codeBlocks.push(candidate);
+        }
+      }
+
+      // 2) If still nothing, heuristically treat the whole markdown as code
+      // when it clearly contains tokens for the requested language.
+      if (codeBlocks.length === 0 && detectByContent(normalizedLang, md)) {
+        // require at least two lines to avoid grabbing short messages
+        if ((md.match(/\n/g) || []).length >= 1) {
+          codeBlocks.push(md.trim());
+        }
+      }
+
+      if (codeBlocks.length === 0) {
+        if (throwOnNotFound) {
+          throw new Error(
+            `${ANSI.Red}[⚠️ERROR(extractcode)] No ${lang} code block found in markdown${ANSI.Reset}`
+          );
+        }
+
+        return [customNotFoundMessage ?? generateNotFoundPrompt(lang)];
+      }
     }
 
     return codeBlocks;

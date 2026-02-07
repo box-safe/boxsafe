@@ -8,6 +8,21 @@ import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { LService, LModel, validateServiceModel } from "@pack/ai/label";
 
+// Support KEYGemini environment variable as the Google/Gemini API key.
+// Some environments expose the Gemini key under a custom name (e.g., KEYGemini).
+// Map it to the environment variables the Google SDKs commonly check:
+// - `GOOGLE_GENERATIVE_AI_API_KEY` (used by Google Generative AI / Gemini)
+// - `GOOGLE_API_KEY` (older/alternate name)
+const _geminiKey = process.env.KEYGemini ?? process.env.KEY_GEMINI ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+if (_geminiKey) {
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = _geminiKey;
+  }
+  if (!process.env.GOOGLE_API_KEY) {
+    process.env.GOOGLE_API_KEY = _geminiKey;
+  }
+}
+
 interface LLMContract {
   generate(prompt: string): Promise<string>;
 }
@@ -36,7 +51,7 @@ function createSDKAdapter(
 }
 
 const MOCK_ADAPTER: LLMContract = {
-  async generate(prompt?: string): Promise<string> {
+  async generate(): Promise<string> {
     // Return a minimal bash code block so extractCode can find runnable code
     // This keeps mock behavior useful for testing the loop pipeline.
     return "```bash\necho \"Mock response\"\n```";
@@ -74,6 +89,12 @@ export function createLLM(
 ): LLMContract;
 
 export function createLLM(service: LService, model: LModel): LLMContract {
+  // Log chosen service/model and presence of Gemini key for diagnostics
+  console.info(`[LLM Provider] requested service=${service} model=${model}`);
+  console.info(
+    `[LLM Provider] GOOGLE_GENERATIVE_AI_API_KEY present=${Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY)}`
+  );
+
   validateServiceModel(service, model);
 
   if (service === LService.MOCK) return MOCK_ADAPTER;

@@ -104,7 +104,12 @@ export const loop = async (
     while (true) {
       try {
         if (signal?.aborted) throw new Error("Aborted");
-        await runLLM(feedback, llm);
+        // Ensure the model (or mock) receives an explicit instruction about
+        // the requested code language so we consistently get the correct
+        // fenced block back. This helps the mock and real LLMs produce the
+        // expected language output regardless of previous feedback text.
+        const promptToSend = `${feedback}\n\nRespond ONLY with a single code block in the language: ${lang}`;
+        await runLLM(promptToSend, llm);
         break;
       } catch (err: any) {
         llmAttempts++;
@@ -163,11 +168,40 @@ export const loop = async (
     let execResult: any;
     try {
       if (signal?.aborted) throw new Error("Aborted");
-      execResult = await execode(cmd);
+      // If caller left the default `echo OK`, automatically run the
+      // generated output file according to the requested language so the
+      // loop actually executes the produced artifact.
+      let execCmd = cmd;
+      if (typeof cmd === 'string' && cmd === 'echo OK') {
+        if (lang === 'ts') execCmd = `ts-node ${pathOutput}`;
+        else if (lang === 'js') execCmd = `node ${pathOutput}`;
+        else if (lang === 'py' || lang === 'python') execCmd = `python ${pathOutput}`;
+        else if (lang === 'sh' || lang === 'bash' || lang === 'shell') execCmd = `bash ${pathOutput}`;
+        else execCmd = `${pathOutput}`;
+
+        log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} auto-executing generated file with: ${execCmd}`);
+      }
+
+      execResult = await execode(execCmd);
     } catch (err: any) {
       log.error(`${ANSI.Red}[Execode]${ANSI.Reset}`, err?.message ?? err);
       feedback = `Execution failed: ${err?.message ?? "unknown"}`;
       continue;
+    }
+
+    // Debug: log exec output and the written artifact to diagnose failures
+    try {
+      log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} exit=${execResult.exitCode}`);
+      log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} stdout=${String(execResult.stdout).slice(0,1000)}`);
+      log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} stderr=${String(execResult.stderr).slice(0,1000)}`);
+      try {
+        const outFile = await readFile(pathOutput, 'utf-8');
+        log.info(`${ANSI.Cyan}[OutputFile]${ANSI.Reset} ${outFile.slice(0,1000)}`);
+      } catch (err: any) {
+        log.info(`${ANSI.Cyan}[OutputFile]${ANSI.Reset} could not read output file: ${err?.message ?? err}`);
+      }
+    } catch (errAny) {
+      // swallow logging errors
     }
 
     // Validate execution results using the waterfall pipeline
