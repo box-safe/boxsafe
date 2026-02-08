@@ -8,8 +8,8 @@
 import "dotenv/config";
 import * as path from "path";
 import fs from "fs/promises";
-import { createLLM } from "@pack/ai/provider";
-import { LService, LModel } from "@pack/ai/label";
+import { createLLM } from "@ai/provider";
+import { LService, LModel } from "@ai/label";
 
 interface RunnerConfig {
   service: LService;

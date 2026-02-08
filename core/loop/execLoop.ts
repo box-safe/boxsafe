@@ -23,9 +23,9 @@
 
 import { readFile, writeFile, rename } from "node:fs/promises";
 import { pathToCode } from "@core/paths/paths";
-import { createLLM } from "@pack/ai/provider";
-import { runLLM } from "@pack/ai/caller";
-import { LService, LModel } from "@pack/ai/label";
+import { createLLM } from "@ai/provider";
+import { runLLM } from "@ai/caller";
+import { LService, LModel } from "@ai/label";
 import { extractCode } from "@/util/extractCode";
 import type { CommandRun } from "@/types";
 import { execode } from "@core/cmd/execode";

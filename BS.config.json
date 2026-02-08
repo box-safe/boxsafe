@@ -51,7 +51,7 @@
 
   "interface": {
     "channel": "terminal",
-    "prompt": "Create a simple TypeScript function that adds two numbers and returns the result",
+    "prompt": "Create a simple TypeScript function that adds two numbers and returns the result, Don't forget to call the function.",
     "notifications": {
       "whatsapp": false,
       "telegram": false,

@@ -6,7 +6,7 @@
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
-import { LService, LModel, validateServiceModel } from "@pack/ai/label";
+import { LService, LModel, validateServiceModel } from "@ai/label";
 
 // Support KEYGemini environment variable as the Google/Gemini API key.
 // Some environments expose the Gemini key under a custom name (e.g., KEYGemini).
