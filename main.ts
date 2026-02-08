@@ -1,78 +1,54 @@
 /**
- * @fileoverview Parses boxsf.json and drives library behavior based on the resolved configuration.
- * @module core
+ * Main entry point for BoxSafe
+ * 
+ * Tests the segmentation system with the loop segment.
  */
-import "dotenv/config";
-import { loop } from "@core/loop/execLoop";
-import { LService, LModel } from "@pack/ai/label";
 
-function parseService(raw?: string): LService {
-  if (!raw) return LService.MOCK;
-  const s = raw.toLowerCase();
-  if (s.includes("open")) return LService.OPENAI;
-  if (s.includes("google") || s.includes("gemini")) return LService.GOOGLE;
-  return LService.MOCK;
-}
+import { initSegments } from "@core/sgmnt/map";
+import logger from "@util/logger";
 
-function parseModel(raw?: string): LModel {
-  if (!raw) return LModel.MOCK;
-  const s = raw.toLowerCase();
-  if (s.includes("gpt") || s.includes("4o")) return LModel.GPT;
-  if (s.includes("gemini")) return LModel.GEMINI;
-  return LModel.MOCK;
-}
+async function main() {
+  logger.info("main", "Starting BoxSafe...");
 
-// If the user didn't set AI_SERVICE but provided a Gemini key, prefer Google
-const inferredService = process.env.AI_SERVICE ?? (process.env.GOOGLE_GENERATIVE_AI_API_KEY ? 'google' : undefined) ?? process.env.AI_SPEC?.split(":")[0];
-let inferredModel = process.env.AI_MODEL ?? process.env.AI_SPEC?.split(":")[1];
+  try {
+    // Initialize segments map and get run function
+    const { runSegment, BSConfig } = await initSegments();
+    logger.info("main", "Segments initialized");
 
-// If service was inferred as Google and no model provided, default to Gemini
-if (!inferredModel && inferredService === 'google') {
-  inferredModel = 'gemini';
-}
+    // Log loaded config for debugging
+    logger.info("main", `Loaded config: model=${BSConfig.model?.primary?.name}, loops=${BSConfig.limits?.loops}`);
+    logger.info("main", `Test prompt: ${BSConfig.interface?.prompt}`);
 
-const service = parseService(inferredService);
-const model = parseModel(inferredModel);
+    // Prepare loop options from config
+    const loopOpts = {
+      service: BSConfig.model?.primary?.provider,
+      model: BSConfig.model?.primary?.name,
+      initialPrompt: BSConfig.interface?.prompt || "Write a simple hello world function",
+      cmd: "echo OK",
+      lang: "ts",
+      pathOutput: "./test-output.ts",
+      maxIterations: BSConfig.limits?.loops || 2,
+      limit: BSConfig.limits?.loops || 2,
+    };
 
-const initialPrompt = process.env.INITIAL_PROMPT || "Escreva um programa para verificar o hardware do usuario e imprimir informações sobre no terminal";
+    logger.info("main", `Running loop segment with options: ${JSON.stringify(loopOpts, null, 2)}`);
 
-// ════════════════════════════════════════════════════════════════
-// 🔧 CORREÇÃO: Usar tsx para executar TypeScript
-// ════════════════════════════════════════════════════════════════
-const pathOutput = process.env.PATH_OUTPUT || "./output.ts";
-const lang = process.env.CODE_LANG || process.env.BOXSAFE_LANG || "ts";
+    // Run the loop segment
+    const result = await runSegment("loop", loopOpts);
+    
+    logger.info("main", `Loop completed: ${JSON.stringify(result, null, 2)}`);
 
-// Auto-detectar comando baseado na linguagem e extensão do arquivo
-function buildExecutionCommand(filepath: string, language: string): string {
-  const ext = filepath.split('.').pop()?.toLowerCase();
-  
-  // TypeScript
-  if (language === 'ts' || ext === 'ts') {
-    return `pnpm tsx ${filepath}`;
+    if (result?.ok) {
+      logger.info("main", "✓ Test passed!");
+      process.exit(0);
+    } else {
+      logger.error("main", "✗ Test failed!");
+      process.exit(1);
+    }
+  } catch (err: any) {
+    logger.error("main", `Fatal error: ${err?.message ?? err}`);
+    process.exit(1);
   }
-  
-  // JavaScript
-  if (language === 'js' || ext === 'js') {
-    return `node ${filepath}`;
-  }
-  
-  // Python
-  if (language === 'py' || language === 'python' || ext === 'py') {
-    return `python3 ${filepath}`;
-  }
-  
-  // Fallback para o padrão antigo
-  return process.env.CMD || `echo "Unsupported language: ${language}"`;
 }
 
-const cmd = process.env.CMD 
-  ? (process.env.CMD.startsWith("[") ? JSON.parse(process.env.CMD) : process.env.CMD)
-  : buildExecutionCommand(pathOutput, lang);
-
-console.log(`[Main] Execution command: ${cmd}`);
-
-// Call loop with constructed options
-loop({ service, model, initialPrompt, cmd, lang, pathOutput }).catch((err) => {
-  console.error("[loop] error:", err);
-  process.exitCode = 1;
-});
+main();

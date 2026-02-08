@@ -1,77 +1,88 @@
-export type ModelSource = "cloud" | "local" | "both"
-export type Limit = number | "infinity"
+// Types aligned with BS.config.json
 
-export type CloudProvider = "google" | "openai" | "anthropic"
-export type ContainerEngine = "docker" | "podman"
-export type NetworkMode = "none" | "bridge"
-export type ContainerRuntime = "default"
-export type RestartPolicy = "no" | "always"
+export type Limit = number | "infinity";
 
-export type LlamaModel = string
-export type LlamaParameters = Record<string, never>
-
-export type LocalAIConfig = {
-  enabled: boolean
-  endpoint: string
-  model: LlamaModel
-  parameters: LlamaParameters
-  limits: {
-    requests: Limit
-  }
+export interface ProjectConfig {
+  workspace?: string;
+  testDir?: string;
+  versionControl?: {
+    before?: boolean;
+    after?: boolean;
+    generateNotes?: boolean;
+  };
 }
 
-export type ModelRotationConfig = {
-  enabled: boolean
-  extras: string[]
-  maxMain: number
-  maxExtras: Limit
+export interface ModelPrimary {
+  provider: string;
+  name: string;
 }
 
-export type CloudAIConfig = {
-  provider: CloudProvider
-  model: string
-  limits: {
-    requests: number
-    tokens: Limit
-  }
-  modelRotation: ModelRotationConfig
+export interface ModelConfig {
+  primary?: ModelPrimary;
+  fallback?: any[];
+  endpoint?: string | null;
+  parameters?: Record<string, any>;
 }
 
-export type ContainerConfig = {
-  root: boolean
-  memory: string
-  cpu: number
-  network: NetworkMode
-  runtime: ContainerRuntime
-  restart: RestartPolicy
+export interface SmartRotationConfig {
+  enabled?: boolean;
+  simple?: any[];
+  complex?: any[];
 }
 
-export type SandboxConfig = {
-  enabled: boolean
-  engine: ContainerEngine
-  container: ContainerConfig
+export interface TimeoutConfig {
+  enabled?: boolean;
+  duration?: string;
+  notify?: boolean;
 }
 
-export type CommandRun = [string, string[]] | string
-export type CommandSetup = string[]
-
-export type Commands = {
-  run: CommandRun
-  setup: CommandSetup
+export interface LimitsConfig {
+  tokens?: number;
+  loops?: string | Limit;
+  timeout?: TimeoutConfig;
 }
 
-export type PathsConfig = {
-  root: string
-  write: string
+export interface SandboxConfig {
+  enabled?: boolean;
+  engine?: string;
+  memory?: string;
+  cpu?: number;
+  network?: string;
+}
+
+export type CommandRun = string | [string, string[]];
+
+export interface CommandsConfig {
+  setup?: string | null;
+  run?: string | null;
+  test?: string | null;
+}
+
+export interface InterfaceNotifications {
+  whatsapp?: boolean;
+  telegram?: boolean;
+  slack?: boolean;
+  email?: boolean;
+}
+
+export interface InterfaceConfig {
+  channel?: string;
+  prompt?: string | null;
+  notifications?: InterfaceNotifications;
+}
+
+export interface TeachConfig {
+  urls?: string[];
+  files?: string[];
 }
 
 export interface BoxSafeConfig {
-  ai: {
-    source: ModelSource
-    local: LocalAIConfig
-    cloud: CloudAIConfig
-  }
-  sandbox: SandboxConfig
-  commands: Commands
-  paths: PathsConfig
+  project?: ProjectConfig;
+  model?: ModelConfig;
+  smartRotation?: SmartRotationConfig;
+  limits?: LimitsConfig;
+  sandbox?: SandboxConfig;
+  commands?: CommandsConfig;
+  interface?: InterfaceConfig;
+  teach?: TeachConfig;
 }

@@ -1,0 +1,67 @@
+{
+  "project": {
+    "workspace": "./src",
+    "testDir": "./",
+    "versionControl": {
+      "before": true,
+      "after": true,
+      "generateNotes": true
+    }
+  },
+
+  "model": {
+    "primary": {
+      "provider": "google",
+      "name": "gemini-2.5-flash"
+    },
+    "fallback": [],
+    "endpoint": null,
+    "parameters": {}
+  },
+
+  "smartRotation": {
+    "enabled": false,
+    "simple": [],
+    "complex": []
+  },
+
+  "limits": {
+    "tokens": 100000,
+    "loops": 2,
+    "timeout": {
+      "enabled": false,
+      "duration": "1h",
+      "notify": true
+    }
+  },
+
+  "sandbox": {
+    "enabled": true,
+    "engine": "docker",
+    "memory": "512m",
+    "cpu": 0.5,
+    "network": "none"
+  },
+
+  "commands": {
+    "setup": "npm install",
+    "run": "npm run dev",
+    "test": null
+  },
+
+  "interface": {
+    "channel": "terminal",
+    "prompt": "Create a simple TypeScript function that adds two numbers and returns the result",
+    "notifications": {
+      "whatsapp": false,
+      "telegram": false,
+      "slack": false,
+      "email": false
+    }
+  },
+
+  "teach": {
+    "urls": [],
+    "files": []
+  }
+}

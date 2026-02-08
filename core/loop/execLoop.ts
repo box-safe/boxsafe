@@ -84,19 +84,18 @@ export const loop = async (
   const llm = createLLM(service, model);
   const log = logger ?? console;
 
-  let iteration = 10;
   const effectiveLimit = typeof limit === "number" ? limit : maxIterations;
   let feedback = initialPrompt;
 
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-  for (iteration = 1; iteration <= effectiveLimit; iteration++) {
+  for (limit = 1; limit <= effectiveLimit; limit++) {
     if (signal?.aborted) {
       log.error(`${ANSI.Red}[Agent]${ANSI.Reset} aborted`);
-      return { ok: false, iterations: iteration };
+      return { ok: false, iterations: limit };
     }
 
-    log.info(`${ANSI.Cyan}[Agent]${ANSI.Reset} iteration ${iteration}`);
+    log.info(`${ANSI.Cyan}[Agent]${ANSI.Reset} iteration ${limit}`);
 
     // Run the LLM with the current feedback (with a small retry/backoff for transient LLM errors)
     let llmAttempts = 0;
@@ -115,7 +114,7 @@ export const loop = async (
         llmAttempts++;
         log.error(`${ANSI.Red}[LLM Runner]${ANSI.Reset}`, err?.message ?? err);
         if (llmAttempts >= maxLlmAttempts) {
-          return { ok: false, iterations: iteration };
+          return { ok: false, iterations: limit };
         }
         const backoff = 200 * Math.pow(2, llmAttempts - 1);
         await sleep(backoff);
@@ -222,8 +221,8 @@ export const loop = async (
 
     // Stop if the execution is valid
     if (verdict?.ok) {
-      log.info(`${ANSI.Green}[Agent]${ANSI.Reset} success after ${iteration} iterations`);
-      return { ok: true, iterations: iteration, verdict, artifacts: { outputFile: pathOutput } };
+      log.info(`${ANSI.Green}[Agent]${ANSI.Reset} success after ${limit} iterations`);
+      return { ok: true, iterations: limit, verdict, artifacts: { outputFile: pathOutput } };
     }
 
     // Build structured feedback for the next iteration
@@ -233,5 +232,5 @@ export const loop = async (
   }
 
   // If the loop completes without a successful verdict
-  return { ok: false, iterations: iteration };
+  return { ok: false, iterations: limit };
 };

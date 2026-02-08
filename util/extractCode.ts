@@ -174,6 +174,7 @@ export const extractCode = async (
       const fenceRegex = /```(?:\w+)?\n([\s\S]*?)\n```/g;
       let m: RegExpExecArray | null;
       while ((m = fenceRegex.exec(md)) !== null) {
+        if (!m || !m[1]) continue;
         const candidate = m[1].trim();
         if (candidate && (detectByContent(normalizedLang, candidate) || normalizedLang === 'ts' || normalizedLang === 'js')) {
           codeBlocks.push(candidate);
