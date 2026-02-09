@@ -51,7 +51,7 @@
 
   "interface": {
     "channel": "terminal",
-    "prompt": "Create a simple TypeScript function that adds two numbers and returns the result, Don't forget to call the function.",
+    "prompt": "Use Node.js fs/promises to create a folder named 'test' at the root of the workspace (./test). Inside it, create a file called 'test.md' and write '# hello world' as its content. Use mkdir and writeFile from fs/promises. After creating the files, read and print the content of test.md to verify it was created correctly.",
     "notifications": {
       "whatsapp": false,
       "telegram": false,

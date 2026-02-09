@@ -25,8 +25,8 @@ async function main() {
       model: BSConfig.model?.primary?.name,
       initialPrompt: BSConfig.interface?.prompt || "Write a simple hello world function",
       cmd: "echo OK",
-      lang: "ts",
-      pathOutput: "./test-output.ts",
+      lang: "js",
+      pathOutput: "./test-output.js",
       maxIterations: BSConfig.limits?.loops || 2,
       limit: BSConfig.limits?.loops || 2,
     };
