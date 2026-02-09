@@ -3,13 +3,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "target": "esnext",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@core/*": ["core/*"],
-      "@ai/*": ["ai/*"],
-      "@memo/*": ["memo/*"],
-      "@util/*": ["util/*"]
+      "@core/*": ["./core/*"],
+      "@ai/*": ["./ai/*"],
+      "@memo/*": ["./memo/*"],
+      "@util/*": ["./util/*"]
     },
     "allowJs": true,
     "types": ["node"],
