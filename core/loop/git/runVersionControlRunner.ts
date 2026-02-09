@@ -10,7 +10,7 @@ async function main() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const repoRoot = path.resolve(__dirname, '../../../');
 
-  const configPath = path.join(repoRoot, 'BS.config.json');
+  const configPath = path.join(repoRoot, 'boxsafe.config.json');
   let bsConfig: any = {};
   if (fs.existsSync(configPath)) {
     try {

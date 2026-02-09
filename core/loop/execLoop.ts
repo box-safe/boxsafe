@@ -33,6 +33,9 @@ import { ANSI } from "@util/ANSI";
 import { waterfall } from "@core/loop/waterfall";
 import { createNavigator } from "@core/navigate";
 import type { Navigator } from "@core/navigate";
+import fs from 'node:fs';
+import path from 'node:path';
+import { runVersionControl } from '@core/loop/git';
 
 interface LoopOptions {
   service: LService;
@@ -106,6 +109,36 @@ export const loop = async (
 ): Promise<LoopResult> => {
   const llm = createLLM(service, model);
   const log = logger ?? console;
+
+  // Version control: configurable commit messages and behavior
+  // Top-level variable for the 'before' commit message so it's easy to find and change.
+  const BEFORE_COMMIT_MESSAGE = process.env.BOXSAFE_BEFORE_MSG ?? 'save agent';
+
+  // Load user's boxsafe config if present
+  const configPath = path.resolve(process.cwd(), 'boxsafe.config.json');
+  let boxConfig: any = {};
+  try {
+    if (fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, 'utf-8');
+      boxConfig = JSON.parse(raw);
+    }
+  } catch (err) {
+    boxConfig = {};
+  }
+
+  const vcBefore = Boolean(boxConfig.project?.versionControl?.before ?? false);
+  const vcAfter = Boolean(boxConfig.project?.versionControl?.after ?? false);
+  const vcGenerateNotes = Boolean(boxConfig.project?.versionControl?.generateNotes ?? false);
+
+  // If configured, run a one-time 'before' commit when the agent starts
+  if (vcBefore) {
+    try {
+      await runVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: BEFORE_COMMIT_MESSAGE, autoPush: false, generateNotes: vcGenerateNotes });
+      log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} before-commit completed`);
+    } catch (err: any) {
+      log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} before-commit failed: ${err?.message ?? err}`);
+    }
+  }
 
   // Initialize navigator if workspace is provided and no instance was injected
   const navigator = injectedNavigator ?? (workspace ? createNavigator({ workspace }) : null);
@@ -248,6 +281,18 @@ export const loop = async (
     // Stop if the execution is valid
     if (verdict?.ok) {
       log.info(`${ANSI.Green}[Agent]${ANSI.Reset} success after ${limit} iterations`);
+
+      // After-success versioning (commit explaining what was done)
+      if (vcAfter) {
+        const afterMessage = `agent: completed successfully in ${limit} iterations`;
+        try {
+          await runVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: afterMessage, autoPush: false, generateNotes: vcGenerateNotes });
+          log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} after-commit completed`);
+        } catch (err: any) {
+          log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} after-commit failed: ${err?.message ?? err}`);
+        }
+      }
+
       return { ok: true, iterations: limit, verdict, artifacts: { outputFile: pathOutput }, navigator };
     }
 

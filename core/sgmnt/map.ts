@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
  */
 export async function initSegments() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const CONFIG_PATH = path.resolve(__dirname, "../../BS.config.json");
+  const CONFIG_PATH = path.resolve(__dirname, "../../boxsafe.config.json");
   let BSConfig: any = {};
   try {
     const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
