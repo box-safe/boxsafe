@@ -82,6 +82,21 @@ export async function initSegments() {
       urls: BSConfig.teach?.urls ?? null, // create
       files: BSConfig.teach?.files ?? null, // create
     },
+
+    versionControl: {
+      handler: async (params?: any) => {
+        const mod = await import('@core/loop/git');
+        return mod.runVersionControl(params ?? {});
+      },
+      meta: {
+        description: 'Versioning helper: commit, notes and optional push to origin',
+        implemented: true,
+        config: {
+          autoPushDefault: BSConfig.project?.versionControl?.after ?? false,
+          createNotesDefault: BSConfig.project?.versionControl?.generateNotes ?? false,
+        },
+      },
+    },
   };
 
   type RouteName = keyof typeof routes;

@@ -105,3 +105,8 @@ O módulo só loga erros no console. Se algo falhar:
 - `deleteCredLinux`: retorna `false`
 
 Tratamento de erro fica por sua conta.
+
+
+## WINDOWS
+for windows we use keytar
+

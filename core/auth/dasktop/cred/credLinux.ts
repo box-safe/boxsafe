@@ -1,6 +1,6 @@
 /***
  * @fileoverview
- * Gerencia credenciais usando secret-tool do Linux
+ * Manages credentials using Linux secret-tool
  * @module
  * memo/desktop/pass
  ***/
@@ -8,7 +8,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ANSI } from '@util/ANSI';
 
-const execAsync = promisify(exec); 
+const execAsync = promisify(exec);
 
 interface CredentialArgs {
   password: string;
@@ -25,9 +25,9 @@ interface LookupArgs {
 const DEFAULT_SERVICE = 'box-safe';
 
 /**
- * Salva credencial no keyring do sistema
+ * Saves credential to the system keyring
  */
-export async function saveCredLinux({
+export async function setCredLinux({
   password,
   label,
   account,
@@ -39,13 +39,13 @@ export async function saveCredLinux({
     );
     return true;
   } catch (err) {
-    console.error(`${ANSI.Red}[Error] Falha ao salvar credencial: ${err}${ANSI.Reset}`);
+    console.error(`${ANSI.Red}[Error] Failed to save credential: ${err}${ANSI.Reset}`);
     return false;
   }
 }
 
 /**
- * Recupera credencial do keyring
+ * Retrieves credential from the keyring
  */
 export async function getCredLinux({
   account,
@@ -57,13 +57,13 @@ export async function getCredLinux({
     );
     return stdout.trim();
   } catch (err) {
-    console.error(`${ANSI.Red}[Error] Credencial não encontrada: ${account}${ANSI.Reset}`);
+    console.error(`${ANSI.Red}[Error] Credential not found: ${account}${ANSI.Reset}`);
     return null;
   }
 }
 
 /**
- * Deleta credencial do keyring
+ * Deletes credential from the keyring
  */
 export async function deleteCredLinux({
   account,
@@ -73,7 +73,8 @@ export async function deleteCredLinux({
     await execAsync(`secret-tool clear service ${service} account ${account}`);
     return true;
   } catch (err) {
-    console.error(`${ANSI.Red}[Error] Falha ao deletar credencial: ${account}${ANSI.Reset}`);
+    console.error(`${ANSI.Red}[Error] Failed to delete credential: ${account}${ANSI.Reset}`);
     return false;
   }
 }
+
