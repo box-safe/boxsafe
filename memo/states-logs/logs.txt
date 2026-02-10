@@ -2,6 +2,5 @@ exitCode=0
 signal=none
 timedOut=false
 stdout:
-Hello, TypeScript!
 
 stderr:
