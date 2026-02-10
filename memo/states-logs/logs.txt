@@ -1,10 +1,21 @@
-exitCode=0
+exitCode=1
 signal=none
 timedOut=false
 stdout<<<
-I Love you
 
 >>>
 stderr<<<
+An error occurred that will terminate the process.
+file:///home/inky/Development/boxsafe/love_test.js:4
+throw new Error("A critical operation failed and the process cannot continue.");
+      ^
+
+Error: A critical operation failed and the process cannot continue.
+    at file:///home/inky/Development/boxsafe/love_test.js:4:7
+    at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:655:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.6.0
 
 >>>

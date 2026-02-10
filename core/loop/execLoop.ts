@@ -293,6 +293,37 @@ export const loop = async (
         log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} auto-executing generated file with: ${execCmd}`);
       }
 
+      // If executing JS: check for CommonJS usage (require) and project type=module.
+      try {
+        if (lang === 'js' && execCmd.startsWith('node ')) {
+          const pkgPath = path.join(process.cwd(), 'package.json');
+          let isModuleType = false;
+          try {
+            if (fs.existsSync(pkgPath)) {
+              const pkgRaw = fs.readFileSync(pkgPath, 'utf-8');
+              const pkg = JSON.parse(pkgRaw);
+              isModuleType = pkg.type === 'module';
+            }
+          } catch (e) {
+            isModuleType = false;
+          }
+
+          const outContent = fs.readFileSync(pathOutput, 'utf-8');
+          if (isModuleType && /\brequire\s*\(/.test(outContent) && path.extname(pathOutput) === '.js') {
+            const newPath = pathOutput.replace(/\.js$/, '.cjs');
+            try {
+              await fs.promises.rename(pathOutput, newPath);
+              execCmd = `node ${newPath}`;
+              log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} renamed output to ${newPath} for CommonJS compatibility`);
+            } catch (e) {
+              log.warn(`${ANSI.Yellow}[Execode]${ANSI_Reset} failed to rename file for CJS: ${e?.message ?? e}`);
+            }
+          }
+        }
+      } catch (e) {
+        // non-fatal
+      }
+
       execResult = await execode(execCmd);
     } catch (err: any) {
       log.error(`${ANSI.Red}[Execode]${ANSI.Reset}`, err?.message ?? err);
