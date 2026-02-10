@@ -131,13 +131,37 @@ export const loop = async (
   const vcAfter = Boolean(boxConfig.project?.versionControl?.after ?? false);
   const vcGenerateNotes = Boolean(boxConfig.project?.versionControl?.generateNotes ?? false);
 
+  // Helper to run version control with logging and retries
+  const attemptVersionControl = async (opts: any) => {
+    const maxAttempts = 3;
+    let attempt = 0;
+    let lastErr: any = null;
+    log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} attempting runVersionControl with opts=${JSON.stringify(opts)}`);
+    while (attempt < maxAttempts) {
+      attempt++;
+      try {
+        log.debug && log.debug(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} attempt ${attempt}`);
+        const res = await runVersionControl(opts);
+        log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} result (attempt ${attempt}): ${JSON.stringify(res)}`);
+        return res;
+      } catch (err: any) {
+        lastErr = err;
+        log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} attempt ${attempt} failed: ${err?.message ?? err}`);
+        const backoff = 300 * Math.pow(2, attempt - 1);
+        await new Promise((r) => setTimeout(r, backoff));
+      }
+    }
+    log.error(`${ANSI.Red}[VersionControl]${ANSI.Reset} all ${maxAttempts} attempts failed: ${lastErr?.message ?? lastErr}`);
+    throw lastErr;
+  };
+
   // If configured, run a one-time 'before' commit when the agent starts
   if (vcBefore) {
     try {
-      await runVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: BEFORE_COMMIT_MESSAGE, autoPush: false, generateNotes: vcGenerateNotes });
-      log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} before-commit completed`);
+      const res = await attemptVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: BEFORE_COMMIT_MESSAGE, autoPush: false, generateNotes: vcGenerateNotes });
+      log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} before-commit completed: ${JSON.stringify(res)}`);
     } catch (err: any) {
-      log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} before-commit failed: ${err?.message ?? err}`);
+      log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} before-commit failed after retries: ${err?.message ?? err}`);
     }
   }
 
@@ -268,7 +292,7 @@ export const loop = async (
             } else {
               try {
                 const params = obj.params ?? {};
-                const vcRes = await runVersionControl(params);
+                const vcRes = await attemptVersionControl(params);
                 log.info(`${ANSI.Cyan}[Tool]${ANSI.Reset} versionControl result: ${JSON.stringify(vcRes ?? { ok: true })}`);
               } catch (vcErr: any) {
                 log.error(`${ANSI.Red}[Tool]${ANSI.Reset} versionControl error: ${vcErr?.message ?? vcErr}`);
@@ -404,10 +428,10 @@ export const loop = async (
       if (vcAfter) {
         const afterMessage = `agent: completed successfully in ${limit} iterations`;
         try {
-          await runVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: afterMessage, autoPush: false, generateNotes: vcGenerateNotes });
-          log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} after-commit completed`);
+          const res = await attemptVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: afterMessage, autoPush: false, generateNotes: vcGenerateNotes });
+          log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} after-commit completed: ${JSON.stringify(res)}`);
         } catch (err: any) {
-          log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} after-commit failed: ${err?.message ?? err}`);
+          log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} after-commit failed after retries: ${err?.message ?? err}`);
         }
       }
 
