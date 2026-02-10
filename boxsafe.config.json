@@ -28,7 +28,7 @@
 
   "limits": {
     "tokens": 100000,
-    "loops": 2,
+    "loops": 1,
     "timeout": {
       "enabled": false,
       "duration": "1h",
@@ -52,7 +52,7 @@
 
   "interface": {
     "channel": "terminal",
-    "prompt": "",
+    "prompt": "crie um arquivo chamado test.ts este arquivo deve imprimeir sucess no terminal apenas isso",
     "notifications": {
       "whatsapp": false,
       "telegram": false,
