@@ -1,9 +1,7 @@
 lembrete usar arquitetura Hexagonal no projeto 
 
-5. criar um módulo único de config (ex: core/config/defaults) que lê boxsafe.config.json, aplica defaults e normaliza tipos
-
-6. fazer core/sgmnt/map.ts e core/loop/execLoop.ts usarem o mesmo loader de config (fonte única da verdade)
 7. tipar o contrato do loop de forma única: exportar LoopOptions/LoopResult de um lugar único e reusar no main.ts (evitar any/index signature)
+
 8. normalizar limits.loops para sempre ser number no loader de config (evitar string|Limit espalhado no runtime)
 9. padronizar paths e logs: centralizar em core/paths e corrigir inconsistências/typos de diretórios de log
 10. tornar path do markdown gerado e path do artefato configuráveis via config/env (sem hardcode de /dev/shm)

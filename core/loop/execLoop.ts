@@ -41,40 +41,7 @@ import { initNavigator } from './initNavigator';
 import { writeArtifactAtomically } from './writeArtifactAtomically';
 import { buildExecCommand } from './buildExecCommand';
 import { runValidation } from './runValidation';
-
-interface LoopOptions {
-  service: LService;
-  model: LModel;
-  initialPrompt: string;
-  cmd: CommandRun;
-  lang: string;
-  pathOutput: string;
-  // optional safety / configuration
-  maxIterations?: number;
-  // number of iterations to run the main loop (overrides maxIterations when provided)
-  limit?: number;
-  signal?: AbortSignal;
-  // allow a custom path for the model-generated markdown (defaults to `pathToCode`)
-  pathGeneratedMarkdown?: string;
-  // optional navigator instance for file system operations within the workspace
-  navigator?: Navigator;
-  // workspace path for creating navigator if not provided
-  workspace?: string;
-  logger?: {
-    info: (...args: any[]) => void;
-    warn: (...args: any[]) => void;
-    error: (...args: any[]) => void;
-    debug?: (...args: any[]) => void;
-  };
-}
-
-export interface LoopResult {
-  ok: boolean;
-  iterations: number;
-  verdict?: any;
-  artifacts?: { outputFile?: string };
-  navigator?: Navigator | null; // Navigator instance available for reference after loop (null if not initialized)
-}
+import type { LoopOptions, LoopResult } from './types';
 
 /**
  * Create a navigator instance with the given workspace.

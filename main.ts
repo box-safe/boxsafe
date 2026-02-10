@@ -6,20 +6,8 @@
 
 import { initSegments } from "@core/sgmnt/map";
 import logger from "@util/logger";
-
-// Minimal typed options for the loop segment
-type LoopOptions = {
-  service?: string;
-  model?: string;
-  initialPrompt?: string;
-  cmd?: string;
-  lang?: string;
-  pathOutput?: string;
-  workspace?: string;
-  maxIterations?: number;
-  limit?: number;
-  [key: string]: any;
-};
+import type { LoopOptions } from "@core/loop/types";
+import { LService, LModel } from "@ai/label";
 
 async function main() {
   logger.info("main", "Starting BoxSafe (minimal main)...");
@@ -30,16 +18,16 @@ async function main() {
 
     // Build a minimal, typed options object for the loop segment.
     // Note: do not apply project-specific heuristics here — defer to the segment.
+    const loops = typeof BSConfig.limits?.loops === 'number' ? BSConfig.limits.loops : undefined;
     const opts: LoopOptions = {
-      ...(BSConfig.model?.primary?.provider ? { service: BSConfig.model.primary.provider } : {}),
-      ...(BSConfig.model?.primary?.name ? { model: BSConfig.model.primary.name } : {}),
-      ...(BSConfig.interface?.prompt ? { initialPrompt: BSConfig.interface.prompt } : {}),
-      ...(BSConfig.commands?.run ? { cmd: BSConfig.commands.run } : {}),
-      lang: "ts", // Default language for the loop segment
+      service: (BSConfig.model?.primary?.provider ?? LService.GOOGLE) as LService,
+      model: (BSConfig.model?.primary?.name ?? LModel.GEMINI) as LModel,
+      initialPrompt: BSConfig.interface?.prompt ?? "",
+      cmd: BSConfig.commands?.run ?? "echo OK",
+      lang: "ts",
       pathOutput: process.env.AGENT_OUTPUT_PATH ?? "./out.ts",
       workspace: BSConfig.project?.workspace ?? process.cwd(),
-      ...(typeof BSConfig.limits?.loops === 'number' ? { maxIterations: BSConfig.limits.loops } : {}),
-      ...(typeof BSConfig.limits?.loops === 'number' ? { limit: BSConfig.limits.loops } : {}),
+      ...(loops ? { maxIterations: loops, limit: loops } : {}),
     };
 
     logger.info("main", `Running loop segment`);

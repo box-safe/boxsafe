@@ -19,15 +19,15 @@ export interface ModelPrimary {
 
 export interface ModelConfig {
   primary?: ModelPrimary;
-  fallback?: any[];
+  fallback?: unknown[];
   endpoint?: string | null;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
 }
 
 export interface SmartRotationConfig {
   enabled?: boolean;
-  simple?: any[];
-  complex?: any[];
+  simple?: unknown[];
+  complex?: unknown[];
 }
 
 export interface TimeoutConfig {
