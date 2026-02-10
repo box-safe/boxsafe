@@ -1,7 +1,11 @@
-if (process.platform === 'linux') {
+const platform = process.platform;
+
+if (platform === 'linux') {
   console.log('I Love you');
-} else if (process.platform === 'win32') {
+} else if (platform === 'win32') {
   console.log('I Hate you');
 } else {
-  console.log('I am neutral about your OS');
+  // Handle other operating systems if necessary, or do nothing.
+  // The prompt specifically asked only for Linux and Windows.
+  console.log(`Unexpected OS: ${platform}`); 
 }
