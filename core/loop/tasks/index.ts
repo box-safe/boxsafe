@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
+import { TASKS_STATE_DIR, TASKS_TASKS_DIR, TASKS_STATE_FILE } from '@core/paths/paths';
 
 export class TasksManager {
   todoPath: string;
@@ -12,9 +13,9 @@ export class TasksManager {
 
   constructor(todoPath: string, baseDir?: string) {
     this.todoPath = path.resolve(todoPath);
-    this.baseDir = baseDir ? path.resolve(baseDir) : path.join(process.cwd(), 'memo', 'state', 'tasks');
-    this.tasksDir = path.join(this.baseDir, 'tasks');
-    this.statePath = path.join(this.baseDir, 'state.json');
+    this.baseDir = baseDir ? path.resolve(baseDir) : TASKS_STATE_DIR;
+    this.tasksDir = baseDir ? path.join(this.baseDir, 'tasks') : TASKS_TASKS_DIR;
+    this.statePath = baseDir ? path.join(this.baseDir, 'state.json') : TASKS_STATE_FILE;
   }
 
   async init() {

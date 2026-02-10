@@ -1,7 +1,5 @@
 lembrete usar arquitetura Hexagonal no projeto 
 
-8. normalizar limits.loops para sempre ser number no loader de config (evitar string|Limit espalhado no runtime)
-
 9. padronizar paths e logs: centralizar em core/paths e corrigir inconsistências/typos de diretórios de log
 10. tornar path do markdown gerado e path do artefato configuráveis via config/env (sem hardcode de /dev/shm)
 11. endurecer execução de comandos: reduzir uso de shell=true quando possível, validar/escapar args, e tornar timeout configurável

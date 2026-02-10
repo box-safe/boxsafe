@@ -1,11 +1,9 @@
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import type { CommandRun } from "@/types";
 import type { ExecResult } from "@core/loop/waterfall";
+import { STATES_LOGS_DIR, STATES_LOG_FILE } from "@core/paths/paths";
 
-const LOG_DIR = path.join(process.cwd(), "memo", "states-logs");
-const LOG_FILE = path.join(LOG_DIR, "logs.txt");
 const MAX_RUNTIME_MS = 60_000;
 
 export async function execode(
@@ -13,7 +11,7 @@ export async function execode(
 ): Promise<ExecResult> {
   const { cmd, args } = normalizeCommand(command);
 
-  await mkdir(LOG_DIR, { recursive: true });
+  await mkdir(STATES_LOGS_DIR, { recursive: true });
 
   return new Promise<ExecResult>((resolve, reject) => {
     const child = spawn(cmd, args, { shell: true });
@@ -51,7 +49,7 @@ export async function execode(
         `stderr:`, stderr,
       ].join("\n");
 
-      await writeFile(LOG_FILE, log, "utf8");
+      await writeFile(STATES_LOG_FILE, log, "utf8");
 
       resolve({
         exitCode: code ?? 0,
