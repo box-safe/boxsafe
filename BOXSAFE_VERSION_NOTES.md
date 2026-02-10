@@ -8,5 +8,4 @@ Summary:
 
 agent: completed successfully in 1 iterations
 
-love_test.cjs
 love_test.js
