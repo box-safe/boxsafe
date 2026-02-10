@@ -2,7 +2,7 @@ exitCode=0
 signal=none
 timedOut=false
 stdout<<<
-hello world!
+Hello from a single code block!
 
 >>>
 stderr<<<
