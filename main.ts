@@ -20,13 +20,24 @@ async function main() {
     logger.info("main", `Test prompt: ${BSConfig.interface?.prompt}`);
 
     // Prepare loop options from config
+    // try to infer target filename from prompt (Portuguese "chamado <name>")
+    const promptText: string = String(BSConfig.interface?.prompt ?? "").trim();
+    let inferredFilename = "./test-output.js";
+    try {
+      const m = /chamado\s+([\w.\-/]+)/i.exec(promptText);
+      if (m && m[1]) inferredFilename = m[1];
+    } catch (e) {
+      // fallback remains
+    }
+
     const loopOpts = {
       service: BSConfig.model?.primary?.provider,
       model: BSConfig.model?.primary?.name,
       initialPrompt: BSConfig.interface?.prompt || "Write a simple hello world function",
       cmd: "echo OK",
       lang: "js",
-      pathOutput: "./test-output.js",
+      pathOutput: inferredFilename,
+      workspace: BSConfig.project?.workspace ?? process.cwd(),
       maxIterations: BSConfig.limits?.loops || 2,
       limit: BSConfig.limits?.loops || 2,
     };
