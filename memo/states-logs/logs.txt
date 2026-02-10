@@ -3,9 +3,5 @@ signal=none
 timedOut=false
 stdout:
 Hello, TypeScript!
-User ID: 1, Name: Alice
-User ID: 2, Name: Bob
-Email: bob@example.com
-The current status is Active.
 
 stderr:
