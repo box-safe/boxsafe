@@ -2,7 +2,7 @@ exitCode=0
 signal=none
 timedOut=false
 stdout<<<
-I Love you
+hello world!
 
 >>>
 stderr<<<
