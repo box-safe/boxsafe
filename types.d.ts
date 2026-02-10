@@ -8,6 +8,7 @@ export interface ProjectConfig {
   versionControl?: {
     before?: boolean;
     after?: boolean;
+    autoPush?: boolean;
     generateNotes?: boolean;
   };
 }
@@ -38,7 +39,7 @@ export interface TimeoutConfig {
 
 export interface LimitsConfig {
   tokens?: number;
-  loops?: string | Limit;
+  loops?: Limit;
   timeout?: TimeoutConfig;
 }
 

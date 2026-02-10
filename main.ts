@@ -18,7 +18,7 @@ async function main() {
 
     // Build a minimal, typed options object for the loop segment.
     // Note: do not apply project-specific heuristics here — defer to the segment.
-    const loops = typeof BSConfig.limits?.loops === 'number' ? BSConfig.limits.loops : undefined;
+    const loops = BSConfig.limits?.loops;
     const opts: LoopOptions = {
       service: (BSConfig.model?.primary?.provider ?? LService.GOOGLE) as LService,
       model: (BSConfig.model?.primary?.name ?? LModel.GEMINI) as LModel,

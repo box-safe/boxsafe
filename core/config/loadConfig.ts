@@ -3,19 +3,25 @@ import path from 'node:path';
 import type { BoxSafeConfig } from '@/types';
 import { DEFAULT_BOXSAFE_CONFIG } from './defaults';
 
+export type NormalizedBoxSafeConfig = Omit<BoxSafeConfig, 'limits'> & {
+  limits?: Omit<NonNullable<BoxSafeConfig['limits']>, 'loops'> & {
+    loops?: number;
+  };
+};
+
 type LoadConfigResult = {
-  config: BoxSafeConfig;
+  config: NormalizedBoxSafeConfig;
   source: { path: string; loaded: boolean };
 };
 
-function isPlainObject(v: unknown): v is Record<string, any> {
+function isPlainObject(v: unknown): v is Record<string, unknown> {
   return Boolean(v) && typeof v === 'object' && !Array.isArray(v);
 }
 
-function deepMerge<T>(base: T, override: any): T {
+function deepMerge<T>(base: T, override: unknown): T {
   if (!isPlainObject(base) || !isPlainObject(override)) return (override ?? base) as T;
 
-  const out: Record<string, any> = { ...(base as any) };
+  const out: Record<string, unknown> = { ...(base as any) };
   for (const [k, v] of Object.entries(override)) {
     const bv = (base as any)[k];
     if (isPlainObject(bv) && isPlainObject(v)) out[k] = deepMerge(bv, v);
@@ -38,7 +44,7 @@ function normalizeLoops(v: unknown, fallback: number): number {
 export function loadBoxSafeConfig(configPath?: string): LoadConfigResult {
   const p = configPath ?? path.resolve(process.cwd(), 'boxsafe.config.json');
 
-  let rawConfig: any = null;
+  let rawConfig: unknown = null;
   try {
     if (fs.existsSync(p)) {
       rawConfig = JSON.parse(fs.readFileSync(p, 'utf-8'));
@@ -54,7 +60,7 @@ export function loadBoxSafeConfig(configPath?: string): LoadConfigResult {
   (merged.limits as any).loops = normalizeLoops((merged.limits as any).loops, loopsFallback);
 
   return {
-    config: merged as BoxSafeConfig,
+    config: merged as NormalizedBoxSafeConfig,
     source: { path: p, loaded: Boolean(rawConfig) },
   };
 }

@@ -1,10 +1,11 @@
 import { loadBoxSafeConfig } from '@core/config/loadConfig';
+import type { NormalizedBoxSafeConfig } from '@core/config/loadConfig';
 
-export function loadBoxConfig(configPath?: string): any {
+export function loadBoxConfig(configPath?: string): NormalizedBoxSafeConfig {
   return loadBoxSafeConfig(configPath).config;
 }
 
-export function getVersionControlFlags(boxConfig: any): {
+export function getVersionControlFlags(boxConfig: NormalizedBoxSafeConfig): {
   vcBefore: boolean;
   vcAfter: boolean;
   vcGenerateNotes: boolean;
