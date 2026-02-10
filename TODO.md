@@ -1,6 +1,6 @@
 lembrete usar arquitetura Hexagonal no projeto 
 
-7. tipar o contrato do loop de forma única: exportar LoopOptions/LoopResult de um lugar único e reusar no main.ts (evitar any/index signature)
+7. contrato do loop de forma única: exportado LoopOptions/LoopResult de um lugar único e reusar no main.ts (evitar any/index signature)
 
 8. normalizar limits.loops para sempre ser number no loader de config (evitar string|Limit espalhado no runtime)
 9. padronizar paths e logs: centralizar em core/paths e corrigir inconsistências/typos de diretórios de log
