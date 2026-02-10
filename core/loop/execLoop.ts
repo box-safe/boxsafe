@@ -133,11 +133,7 @@ export const loop = async (
     while (true) {
       try {
         if (signal?.aborted) throw new Error("Aborted");
-        // Ensure the model (or mock) receives an explicit instruction about
-        // the requested code language so we consistently get the correct
-        // fenced block back. This helps the mock and real LLMs produce the
-        // expected language output regardless of previous feedback text.
-        const promptToSend = `${feedback}\n\nRespond ONLY with a single code block in the language: ${lang}`;
+        const promptToSend = `${feedback}\n\nYou may optionally emit tool calls as JSON fenced blocks (\`\`\`json-tool ...\`\`\`) BEFORE the final code block. If you do, set tool=\"navigate\" and params.op=\"write\" to create files. Then, ALWAYS end your response with exactly ONE code block in the language: ${lang}`;
         await runLLM(promptToSend, llm);
         break;
       } catch (err: any) {
