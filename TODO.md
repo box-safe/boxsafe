@@ -12,5 +12,6 @@ lembrete usar arquitetura Hexagonal no projeto
 
 
 
-16. criar um sistema de busca por codigo 
+16. criar um sistema de busca por codigo obriagando o modelo indetifica o codigo, exemplo isso ajuda quando  
+
 17. criar sis
