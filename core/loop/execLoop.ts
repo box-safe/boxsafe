@@ -33,6 +33,7 @@ import { ANSI } from "@util/ANSI";
 import { waterfall } from "@core/loop/waterfall";
 import { createNavigator } from "@core/navigate";
 import type { Navigator } from "@core/navigate";
+import TasksManager from './tasks';
 import fs from 'node:fs';
 import path from 'node:path';
 import { runVersionControl } from '@core/loop/git';
@@ -166,12 +167,36 @@ export const loop = async (
     }
   }
 
+  // Initialize TasksManager if user provided a TODO path in config
+  let tasksManager: TasksManager | null = null;
+  try {
+    const todoCfg = boxConfig.project?.todo ? String(boxConfig.project?.todo).trim() : '';
+    if (todoCfg) {
+      const todoPath = path.resolve(todoCfg);
+      if (fs.existsSync(todoPath)) {
+        tasksManager = new TasksManager(todoPath, path.join(process.cwd(), 'memo', 'state', 'tasks'));
+        await tasksManager.init();
+        log.info(`${ANSI.Cyan}[Tasks]${ANSI.Reset} loaded ${tasksManager.total()} tasks`);
+      } else {
+        log.info(`${ANSI.Yellow}[Tasks]${ANSI.Reset} todo path not found: ${todoCfg}`);
+      }
+    }
+  } catch (e) {
+    log.warn(`${ANSI.Yellow}[Tasks]${ANSI.Reset} failed to init tasks: ${e?.message ?? e}`);
+    tasksManager = null;
+  }
+
   // Determine effective workspace (from arg, config or cwd) and initialize navigator
   const effectiveWorkspace = workspace ?? boxConfig.project?.workspace ?? process.cwd();
   const navigator = injectedNavigator ?? (effectiveWorkspace ? createNavigator({ workspace: effectiveWorkspace }) : null);
 
   const effectiveLimit = typeof limit === "number" ? limit : maxIterations;
+  // feedback starts from tasks manager current task if available, otherwise initial prompt
   let feedback = initialPrompt;
+  if (tasksManager && !tasksManager.isFinished()) {
+    const t = tasksManager.getCurrentTask();
+    if (t) feedback = t;
+  }
 
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -298,7 +323,7 @@ export const loop = async (
                 const vcRes = await attemptVersionControl(params);
                 log.info(`${ANSI.Cyan}[Tool]${ANSI.Reset} versionControl result: ${JSON.stringify(vcRes ?? { ok: true })}`);
               } catch (vcErr: any) {
-                log.error(`${ANSI.Red}[Tool]${ANSI_Reset} versionControl error: ${vcErr?.message ?? vcErr}`);
+                log.error(`${ANSI.Red}[Tool]${ANSI.Reset} versionControl error: ${vcErr?.message ?? vcErr}`);
               }
             }
           }
@@ -374,7 +399,7 @@ export const loop = async (
                 const wrapper = `import { spawnSync } from 'node:child_process';\nimport path from 'node:path';\nconst target = path.join(path.dirname(new URL(import.meta.url).pathname), '${path.basename(newPath)}');\nconst res = spawnSync('node', [target], { stdio: 'inherit' });\nif (res.error) throw res.error;\nprocess.exit(res.status ?? 0);\n`;
                 await fs.promises.writeFile(pathOutput, wrapper, 'utf-8');
               } catch (e) {
-                log.warn(`${ANSI.Yellow}[Execode]${ANSI.Reset} failed to write wrapper artifact: ${e?.message ?? e}`);
+                // log.warn(`${ANSI.Yellow}[Execode]${ANSI.Reset} failed to write wrapper artifact: ${e?.message ?? e}`);
               }
             } catch (e) {
               log.warn(`${ANSI.Yellow}[Execode]${ANSI.Reset} failed to rename file`);
@@ -423,15 +448,29 @@ export const loop = async (
       continue;
     }
 
-    // Stop if the execution is valid
+    // Stop or advance if the execution is valid
     if (verdict?.ok) {
-      log.info(`${ANSI.Green}[Agent]${ANSI.Reset} success after ${limit} iterations`);
+      log.info(`${ANSI.Green}[Agent]${ANSI.Reset} success for current task/iteration`);
+
+      // If task manager is active, mark current done and continue to next
+      if (tasksManager) {
+        await tasksManager.markCurrentDone();
+        if (!tasksManager.isFinished()) {
+          const next = tasksManager.getCurrentTask();
+          feedback = next ?? feedback;
+          log.info(`${ANSI.Cyan}[Tasks]${ANSI.Reset} advanced to next task`);
+          // continue loop to process next task
+          continue;
+        }
+        // all tasks done — proceed to after-success flow below
+        log.info(`${ANSI.Cyan}[Tasks]${ANSI.Reset} all tasks completed`);
+      }
 
       // After-success versioning (commit explaining what was done)
       if (vcAfter) {
         const afterMessage = `agent: completed successfully in ${limit} iterations`;
         try {
-          const res = await attemptVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: afterMessage, autoPush: false, generateNotes: vcGenerateNotes });
+          const res = await attemptVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: afterMessage, autoPush: vcAutoPushConfig, generateNotes: vcGenerateNotes });
           log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} after-commit completed: ${JSON.stringify(res)}`);
         } catch (err: any) {
           log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} after-commit failed after retries: ${err?.message ?? err}`);
