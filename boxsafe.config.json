@@ -1,6 +1,6 @@
 {
   "project": {
-    "workspace": "./src",
+    "workspace": "./",
     "testDir": "./",
     "versionControl": {
       "before": true,

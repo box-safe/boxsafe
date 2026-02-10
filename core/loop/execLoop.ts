@@ -140,8 +140,9 @@ export const loop = async (
     }
   }
 
-  // Initialize navigator if workspace is provided and no instance was injected
-  const navigator = injectedNavigator ?? (workspace ? createNavigator({ workspace }) : null);
+  // Determine effective workspace (from arg, config or cwd) and initialize navigator
+  const effectiveWorkspace = workspace ?? boxConfig.project?.workspace ?? process.cwd();
+  const navigator = injectedNavigator ?? (effectiveWorkspace ? createNavigator({ workspace: effectiveWorkspace }) : null);
 
   const effectiveLimit = typeof limit === "number" ? limit : maxIterations;
   let feedback = initialPrompt;
@@ -203,6 +204,58 @@ export const loop = async (
       log.warn(`${ANSI.Yellow}[ExtractCode]${ANSI.Reset}`, err?.message ?? err);
       feedback = "No code blocks were found. Generate valid code for the requested language.";
       continue;
+    }
+
+    // --- Tool call handling: detect JSON tool blocks in the generated markdown ---
+    try {
+      // look for fenced JSON blocks that contain a top-level "tool" property
+      const jsonFenceRe = /```(?:json|json-tool)?\s*({[\s\S]*?})\s*```/g;
+      let m:any;
+      while ((m = jsonFenceRe.exec(markdown)) !== null) {
+        try {
+          const obj = JSON.parse(m[1]);
+          if (obj && typeof obj === 'object' && obj.tool) {
+            log.info(`${ANSI.Cyan}[Tool]${ANSI.Reset} detected tool call: ${obj.tool}`);
+            if (obj.tool === 'navigate') {
+              if (!navigator) {
+                log.warn(`${ANSI.Yellow}[Tool]${ANSI.Reset} navigate requested but navigator is not initialized`);
+              } else {
+                // Map operation to navigator methods
+                const params = obj.params ?? {};
+                const op = params.op;
+                let toolRes: any = null;
+                try {
+                  if (op === 'write') {
+                    toolRes = await navigator.writeFile(params.path, params.content ?? '', params.writeOptions);
+                  } else if (op === 'mkdir') {
+                    toolRes = await navigator.createDirectory(params.path, params.mkdirOptions);
+                  } else if (op === 'delete') {
+                    toolRes = await navigator.delete(params.path, params.deleteOptions);
+                  } else if (op === 'read') {
+                    toolRes = await navigator.readFile(params.path);
+                  } else if (op === 'list') {
+                    toolRes = await navigator.listDirectory(params.path ?? '.');
+                  } else if (op === 'stat') {
+                    toolRes = await navigator.getMetadata(params.path);
+                  } else {
+                    log.warn(`${ANSI.Yellow}[Tool]${ANSI.Reset} unknown navigate op: ${op}`);
+                  }
+                } catch (innerErr: any) {
+                  log.error(`${ANSI.Red}[Tool]${ANSI.Reset} navigate execution error: ${innerErr?.message ?? innerErr}`);
+                }
+
+                log.info(`${ANSI.Cyan}[Tool]${ANSI.Reset} navigate result: ${JSON.stringify(toolRes ?? { ok: false })}`);
+              }
+            } else {
+              log.warn(`${ANSI.Yellow}[Tool]${ANSI.Reset} unhandled tool: ${String(obj.tool)}`);
+            }
+          }
+        } catch (jsonErr: any) {
+          // ignore JSON parse errors for other fences
+        }
+      }
+    } catch (toolErr: any) {
+      log.warn(`${ANSI.Yellow}[Tool]${ANSI.Reset} tool parsing failed: ${toolErr?.message ?? toolErr}`);
     }
 
     if (!codeBlocks || codeBlocks.length === 0) {

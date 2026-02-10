@@ -3,3 +3,4 @@
 2. add funcionalidade de reafaturação de codigo ja existe
 3. modelo sempre commita antes de iniciar qualquer codigo 
 4. procurar e criar diretorio 
+5. navegação entre arquivos e pastas
