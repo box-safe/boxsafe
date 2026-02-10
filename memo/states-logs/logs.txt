@@ -2,5 +2,6 @@ exitCode=0
 signal=none
 timedOut=false
 stdout:
+Hello, Alice Smith! Your ID is 1.
 
 stderr:
