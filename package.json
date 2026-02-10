@@ -31,6 +31,7 @@
     "@ai-sdk/gateway": "^3.0.32",
     "@ai-sdk/google": "^3.0.20",
     "@ai-sdk/openai": "^3.0.25",
+    "@qdrant/js-client-rest": "^1.16.2",
     "ai": "^6.0.68",
     "dotenv": "^17.2.3",
     "keytar": "^7.9.0",

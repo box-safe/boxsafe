@@ -46,7 +46,7 @@
 
   "commands": {
     "setup": "npm install",
-    "run": "npm run dev",
+    "run": "echo OK",
     "test": null
   },
 

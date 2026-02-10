@@ -2,29 +2,17 @@
  * Segmentation map initialization
  *
  * Encapsulates all route logic in a single function.
- * No arguments required—all config comes from BS.config.json and env.
+ * No arguments required—all config comes from boxsafe.config.json and env.
  */
-
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import BSConfig from '@/boxsafe.config.json' assert { type: 'json' };
+import { ANSI } from "@/util/ANSI";
 
 /**
  * Initialize segments map with all available routes.
- * Loads config from BS.config.json and env variables.
+ * Loads config from boxsafe.config.json and env variables.
  * Returns { routes, runSegment } for use in the application.
  */
 export async function initSegments() {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const CONFIG_PATH = path.resolve(__dirname, "../../boxsafe.config.json");
-  let BSConfig: any = {};
-  try {
-    const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
-    BSConfig = JSON.parse(raw);
-  } catch (err) {
-    BSConfig = {};
-  }
-
   const routes: Record<string, any> = {
     loop: {
       handler: async (opts?: any) => {
@@ -36,11 +24,10 @@ export async function initSegments() {
         implemented: true,
         config: {
           defaultLang: "ts",
-          pathOutput: process.env.AGENT_OUTPUT_PATH ?? "./out.js",
+          pathOutput: process.env.AGENT_OUTPUT_PATH ?? "./out.ts",
         },
       },
     },
-
     navigate: {
       handler: async (params?: any) => {
         const mod = await import("@core/navigate");
@@ -57,32 +44,26 @@ export async function initSegments() {
         },
       },
     },
-
     sandbox: null, // create
-
     model: {
-      primary: BSConfig.model?.primary ?? null, // create
-      fallback: BSConfig.model?.fallback ?? null, // create
-      endpoint: BSConfig.model?.endpoint ?? null, // create
+      primary: BSConfig.model?.primary ?? null,
+      fallback: BSConfig.model?.fallback ?? null,
+      endpoint: BSConfig.model?.endpoint ?? null,
     },
-
     commands: {
-      setup: BSConfig.commands?.setup ?? null, // create
+      setup: BSConfig.commands?.setup ?? null,
       run: BSConfig.commands?.run ?? null,
-      test: BSConfig.commands?.test ?? null, // create
+      test: BSConfig.commands?.test ?? null,
     },
-
     interface: {
       channel: BSConfig.interface?.channel ?? null,
-      prompt: BSConfig.interface?.prompt ?? null, // create
-      notifications: BSConfig.interface?.notifications ?? null, // create
+      prompt: BSConfig.interface?.prompt ?? null,
+      notifications: BSConfig.interface?.notifications ?? null,
     },
-
     teach: {
-      urls: BSConfig.teach?.urls ?? null, // create
-      files: BSConfig.teach?.files ?? null, // create
+      urls: BSConfig.teach?.urls ?? null,
+      files: BSConfig.teach?.files ?? null,
     },
-
     versionControl: {
       handler: async (params?: any) => {
         const mod = await import('@core/loop/git');

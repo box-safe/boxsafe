@@ -6,8 +6,8 @@
  * @module core/navigate/handler
  */
 
-import type { NavigatorResult } from './types';
-import { createNavigator, Navigator } from './navigator';
+import type { NavigatorResult } from '@core/navigate/types';
+import { createNavigator, Navigator } from '@core/navigate/navigator';
 
 /**
  * Parameters for navigator operations.

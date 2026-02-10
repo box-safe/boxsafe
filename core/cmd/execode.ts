@@ -47,12 +47,8 @@ export async function execode(
         `exitCode=${code ?? 0}`,
         `signal=${signal ?? "none"}`,
         `timedOut=${timedOut}`,
-        `stdout<<<`,
-        stdout,
-        `>>>`,
-        `stderr<<<`,
-        stderr,
-        `>>>`,
+        `stdout:`, stdout,
+        `stderr:`, stderr,
       ].join("\n");
 
       await writeFile(LOG_FILE, log, "utf8");

@@ -34,9 +34,9 @@ async function main() {
       service: BSConfig.model?.primary?.provider,
       model: BSConfig.model?.primary?.name,
       initialPrompt: BSConfig.interface?.prompt ?? undefined,
-      cmd: BSConfig.interface?.cmd ?? undefined,
-      lang: BSConfig.interface?.lang ?? BSConfig.project?.lang ?? undefined,
-      pathOutput: BSConfig.interface?.pathOutput ?? undefined,
+      cmd: BSConfig.commands.run ?? undefined,
+      lang: "ts", // Default language for the loop segment
+      pathOutput: process.env.AGENT_OUTPUT_PATH ?? "./out.ts",
       workspace: BSConfig.project?.workspace ?? process.cwd(),
       maxIterations: BSConfig.limits?.loops,
       limit: BSConfig.limits?.loops,

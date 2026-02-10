@@ -14,8 +14,8 @@
  * ```
  */
 
-export { Navigator, createNavigator } from './navigator';
-export { NavigatorHandler, createNavigatorHandler } from './handler';
+export { Navigator, createNavigator } from '@core/navigate/navigator';
+export { NavigatorHandler, createNavigatorHandler } from '@core/navigate/handler';
 export type {
   NavigatorConfig,
   NavigatorResult,

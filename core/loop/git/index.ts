@@ -65,16 +65,32 @@ export async function runVersionControl(opts: VersionControlOptions = {}) {
     const remote = await getRemoteUrl(repoRoot);
     if (!remote) return { committed: true, pushed: false, reason: 'no-remote' };
 
+    // try to push normally first
     const pushResp = await pushOrigin(repoRoot);
     if (pushResp.code === 0) return { committed: true, pushed: true };
 
+    // If push failed, attempt to detect branch/upstream issues and retry with set-upstream
+    const branchRes = await runCommand('git rev-parse --abbrev-ref HEAD', repoRoot);
+    const branch = (branchRes.stdout || '').trim();
+    const stderr = String(pushResp.stderr || '').toLowerCase();
+
+    const needsSetUpstream = /no upstream|set upstream|no tracking information|failed to push some refs/.test(stderr) && branch;
+    if (needsSetUpstream) {
+      try {
+        const setRes = await runCommand(`git push --set-upstream origin ${branch}`, repoRoot);
+        if (setRes.code === 0) return { committed: true, pushed: true, note: 'set-upstream' };
+      } catch (e) {
+        // swallow and fall through to token fallback
+      }
+    }
+
     // If push failed (likely auth), try token from keyring or env
     const token = (await getCredLinux({ account: 'gh-token' })) ?? process.env.PASSWORD_GIT ?? process.env.GITHUB_TOKEN;
-    if (!token) return { committed: true, pushed: false, reason: 'auth-needed' };
+    if (!token) return { committed: true, pushed: false, reason: 'auth-needed', pushStdErr: pushResp.stderr };
 
     const tryPushWithToken = await pushWithToken(remote, repoRoot, token);
-    if (tryPushWithToken.code === 0) return { committed: true, pushed: true };
-    return { committed: true, pushed: false, reason: 'push-failed' };
+    if (tryPushWithToken.code === 0) return { committed: true, pushed: true, note: 'pushed-with-token' };
+    return { committed: true, pushed: false, reason: 'push-failed', pushStdErr: String(tryPushWithToken.stderr || tryPushWithToken.stderr) };
   }
 
   return { committed: true, pushed: false };

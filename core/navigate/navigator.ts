@@ -69,7 +69,7 @@ export class Navigator {
       throw new Error(`Workspace path is not a directory: ${config.workspace}`);
     }
 
-    this.workspace = path.resolve(config.workspace);
+    this.workspace = path.resolve(config.workspace); // -- absolute path -- 
     this.followSymlinks = config.followSymlinks ?? false;
     this.maxFileSize = config.maxFileSize ?? 10 * 1024 * 1024; // 10MB default
     this.logger = config.logger ?? console;

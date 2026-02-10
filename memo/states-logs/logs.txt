@@ -1,10 +1,7 @@
 exitCode=0
 signal=none
 timedOut=false
-stdout<<<
-Hello from a single code block!
+stdout:
+Hello, TypeScript!
 
->>>
-stderr<<<
-
->>>
+stderr:
