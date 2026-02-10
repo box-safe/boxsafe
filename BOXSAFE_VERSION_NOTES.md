@@ -9,7 +9,11 @@ Summary:
 save agent
 
 TODO.md
-core/cmd/execode.ts
-core/loop/initTasksManager.ts
-core/loop/tasks/index.ts
+ai/caller.ts
+core/config/defaults/boxsafeDefaults.ts
+core/loop/execLoop.ts
 core/paths/paths.ts
+core/sgmnt/map.ts
+main.ts
+test.ts
+types.d.ts
