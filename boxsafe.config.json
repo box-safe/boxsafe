@@ -2,7 +2,7 @@
   "project": {
     "workspace": "./",
     "testDir": "./",
-    "todo":"./",
+    "todo":"./TODO.md",
     "versionControl": {
       "before": true,
       "after": true,

@@ -21,19 +21,23 @@ async function main() {
 
     // Prepare loop options from config
     // try to infer target filename from prompt (Portuguese "chamado <name>")
-    const promptText: string = String(BSConfig.interface?.prompt ?? "").trim();
+    // If a TODO is provided in config, prompt is not required — only infer when prompt exists
+    const promptRaw = BSConfig.interface?.prompt;
+    const promptText: string = promptRaw ? String(promptRaw).trim() : "";
     let inferredFilename = "./test-output.js";
-    try {
-      const m = /chamado\s+([\w.\-/]+)/i.exec(promptText);
-      if (m && m[1]) inferredFilename = m[1];
-    } catch (e) {
-      // fallback remains
+    if (promptText) {
+      try {
+        const m = /chamado\s+([\w.\-/]+)/i.exec(promptText);
+        if (m && m[1]) inferredFilename = m[1];
+      } catch (e) {
+        // fallback remains
+      }
     }
 
     const loopOpts = {
       service: BSConfig.model?.primary?.provider,
       model: BSConfig.model?.primary?.name,
-      initialPrompt: BSConfig.interface?.prompt || "Write a simple hello world function",
+      initialPrompt: BSConfig.interface?.prompt ?? "",
       cmd: "echo OK",
       lang: "js",
       pathOutput: inferredFilename,
