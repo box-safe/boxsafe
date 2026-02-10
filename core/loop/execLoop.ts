@@ -255,6 +255,30 @@ export const loop = async (
           // ignore JSON parse errors for other fences
         }
       }
+      
+      // also support versionControl tool-calls (only when allowed in config)
+      jsonFenceRe.lastIndex = 0; // reset and re-scan to find vc blocks (cheap)
+      while ((m = jsonFenceRe.exec(markdown)) !== null) {
+        try {
+          const obj = JSON.parse(m[1]);
+          if (obj && typeof obj === 'object' && obj.tool === 'versionControl') {
+            const allowed = Boolean(boxConfig.project?.versionControl?.before) || Boolean(boxConfig.project?.versionControl?.after);
+            if (!allowed) {
+              log.warn(`${ANSI.Yellow}[Tool]${ANSI.Reset} versionControl requested but not authorized in config`);
+            } else {
+              try {
+                const params = obj.params ?? {};
+                const vcRes = await runVersionControl(params);
+                log.info(`${ANSI.Cyan}[Tool]${ANSI.Reset} versionControl result: ${JSON.stringify(vcRes ?? { ok: true })}`);
+              } catch (vcErr: any) {
+                log.error(`${ANSI.Red}[Tool]${ANSI.Reset} versionControl error: ${vcErr?.message ?? vcErr}`);
+              }
+            }
+          }
+        } catch (e) {
+          // ignore parse
+        }
+      }
     } catch (toolErr: any) {
       log.warn(`${ANSI.Yellow}[Tool]${ANSI.Reset} tool parsing failed: ${toolErr?.message ?? toolErr}`);
     }
@@ -296,7 +320,9 @@ export const loop = async (
 
       // If executing JS: check for CommonJS usage (require) and project type=module.
       try {
-        if (lang === 'js' && execCmd.startsWith('node ')) {
+        // normalize execCmd to string for detection (execCmd may be string or [cmd,args])
+        const execCmdStr = typeof execCmd === 'string' ? execCmd : Array.isArray(execCmd) ? String(execCmd[0]) : String(execCmd);
+        if (lang === 'js' && execCmdStr.startsWith('node ')) {
           const pkgPath = path.join(process.cwd(), 'package.json');
           let isModuleType = false;
           try {
@@ -316,8 +342,15 @@ export const loop = async (
               await fs.promises.rename(pathOutput, newPath);
               execCmd = `node ${newPath}`;
               log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} renamed output to ${newPath} for CommonJS compatibility`);
+              // create a minimal ESM wrapper at the original path so artifact exists
+              try {
+                const wrapper = `import { spawnSync } from 'node:child_process';\nimport path from 'node:path';\nconst target = path.join(path.dirname(new URL(import.meta.url).pathname), '${path.basename(newPath)}');\nconst res = spawnSync('node', [target], { stdio: 'inherit' });\nif (res.error) throw res.error;\nprocess.exit(res.status ?? 0);\n`;
+                await fs.promises.writeFile(pathOutput, wrapper, 'utf-8');
+              } catch (e) {
+                log.warn(`${ANSI.Yellow}[Execode]${ANSI.Reset} failed to write wrapper artifact: ${e?.message ?? e}`);
+              }
             } catch (e) {
-              log.warn(`${ANSI.Yellow}[Execode]${ANSI.Reset} failed to rename file for CJS: ${e?.message ?? e}`);
+              log.warn(`${ANSI.Yellow}[Execode]${ANSI.Reset} failed to rename file`);
             }
           }
         }
