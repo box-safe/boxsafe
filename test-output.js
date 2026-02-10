@@ -3,7 +3,5 @@ if (process.platform === 'linux') {
 } else if (process.platform === 'win32') {
   console.log('I Hate you');
 } else {
-  // You might want to add a message for other operating systems like macOS
-  // For this problem, we only care about Linux and Windows.
-  console.log('OS not recognized as Linux or Windows: ' + process.platform);
+  console.log('Unknown OS, but my feelings are neutral.');
 }
