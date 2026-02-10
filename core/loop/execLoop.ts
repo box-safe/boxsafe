@@ -173,12 +173,12 @@ export const loop = async (
     const todoCfg = boxConfig.project?.todo ? String(boxConfig.project?.todo).trim() : '';
     if (todoCfg) {
       const todoPath = path.resolve(todoCfg);
-      if (fs.existsSync(todoPath)) {
+      if (fs.existsSync(todoPath) && fs.statSync(todoPath).isFile()) {
         tasksManager = new TasksManager(todoPath, path.join(process.cwd(), 'memo', 'state', 'tasks'));
         await tasksManager.init();
         log.info(`${ANSI.Cyan}[Tasks]${ANSI.Reset} loaded ${tasksManager.total()} tasks`);
       } else {
-        log.info(`${ANSI.Yellow}[Tasks]${ANSI.Reset} todo path not found: ${todoCfg}`);
+        log.info(`${ANSI.Yellow}[Tasks]${ANSI.Reset} todo path not found or not a file: ${todoCfg}`);
       }
     }
   } catch (e) {
