@@ -130,6 +130,7 @@ export const loop = async (
   const vcBefore = Boolean(boxConfig.project?.versionControl?.before ?? false);
   const vcAfter = Boolean(boxConfig.project?.versionControl?.after ?? false);
   const vcGenerateNotes = Boolean(boxConfig.project?.versionControl?.generateNotes ?? false);
+  const vcAutoPushConfig = Boolean(boxConfig.project?.versionControl?.autoPush ?? false);
 
   // Helper to run version control with logging and retries
   const attemptVersionControl = async (opts: any) => {
@@ -158,7 +159,7 @@ export const loop = async (
   // If configured, run a one-time 'before' commit when the agent starts
   if (vcBefore) {
     try {
-      const res = await attemptVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: BEFORE_COMMIT_MESSAGE, autoPush: false, generateNotes: vcGenerateNotes });
+      const res = await attemptVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: BEFORE_COMMIT_MESSAGE, autoPush: vcAutoPushConfig, generateNotes: vcGenerateNotes });
       log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} before-commit completed: ${JSON.stringify(res)}`);
     } catch (err: any) {
       log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} before-commit failed after retries: ${err?.message ?? err}`);
@@ -292,10 +293,12 @@ export const loop = async (
             } else {
               try {
                 const params = obj.params ?? {};
+                // default autoPush to config value if not specified in params
+                if (params.autoPush === undefined) params.autoPush = vcAutoPushConfig;
                 const vcRes = await attemptVersionControl(params);
                 log.info(`${ANSI.Cyan}[Tool]${ANSI.Reset} versionControl result: ${JSON.stringify(vcRes ?? { ok: true })}`);
               } catch (vcErr: any) {
-                log.error(`${ANSI.Red}[Tool]${ANSI.Reset} versionControl error: ${vcErr?.message ?? vcErr}`);
+                log.error(`${ANSI.Red}[Tool]${ANSI_Reset} versionControl error: ${vcErr?.message ?? vcErr}`);
               }
             }
           }
