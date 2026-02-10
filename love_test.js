@@ -1,9 +1,10 @@
-// love_test.js
-if (process.platform === 'linux') {
+const os = process.platform;
+
+if (os === 'linux') {
   console.log('I Love you');
-} else if (process.platform === 'win32') {
+} else if (os === 'win32') {
   console.log('I Hate you');
 } else {
-  // Optional: handle other operating systems if needed
-  console.log('OS not recognized for this love test.');
+  // Handles other operating systems not explicitly mentioned
+  console.log('OS not recognized, but I still love you!');
 }
