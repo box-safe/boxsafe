@@ -57,8 +57,9 @@ export class TasksManager {
     // write tasks files
     for (let i = 0; i < items.length; i++) {
       const filename = `task_${String(i+1).padStart(3,'0')}.md`;
-      await fs.writeFile(path.join(this.tasksDir, filename), items[i], 'utf-8');
-      this.tasks.push(items[i]);
+      const item = items[i] ?? '';
+      await fs.writeFile(path.join(this.tasksDir, filename), item, 'utf-8');
+      this.tasks.push(item);
       this.state.done.push(false);
     }
 
