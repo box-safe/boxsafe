@@ -20,13 +20,11 @@ interface RunnerConfig {
 const DEFAULT_CONFIG: RunnerConfig = {
   service: LService.GOOGLE,
   model: LModel.GEMINI,
-  outputPath: "codelog.md",
+  outputPath: process.env.BOXSAFE_MARKDOWN_PATH?.trim() || "./memo/generated/codelog.md",
 };
 
-const RAM_ROOT = "/dev/shm";
-
 const writeOutput = async (filePath: string, data: string): Promise<void> => {
-  const resolved = path.join(RAM_ROOT, "receivercodes", filePath);
+  const resolved = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
 
   await fs.mkdir(path.dirname(resolved), { recursive: true });
   await fs.writeFile(resolved, data, "utf8");

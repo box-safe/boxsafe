@@ -134,7 +134,7 @@ export const loop = async (
       try {
         if (signal?.aborted) throw new Error("Aborted");
         const promptToSend = `${feedback}\n\nYou may optionally emit tool calls as JSON fenced blocks (\`\`\`json-tool ...\`\`\`) BEFORE the final code block. If you do, set tool=\"navigate\" and params.op=\"write\" to create files. Then, ALWAYS end your response with exactly ONE code block in the language: ${lang}`;
-        await runLLM(promptToSend, llm);
+        await runLLM(promptToSend, llm, { service, model, outputPath: pathGeneratedMarkdown });
         break;
       } catch (err: any) {
         llmAttempts++;

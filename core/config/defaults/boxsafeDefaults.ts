@@ -55,6 +55,10 @@ export const DEFAULT_BOXSAFE_CONFIG: BoxSafeConfig = {
       email: false,
     },
   },
+  paths: {
+    generatedMarkdown: './memo/generated/codelog.md',
+    artifactOutput: './out.ts',
+  },
   teach: {
     urls: [],
     files: [],

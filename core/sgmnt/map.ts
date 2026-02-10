@@ -25,7 +25,7 @@ export async function initSegments() {
         implemented: true,
         config: {
           defaultLang: "ts",
-          pathOutput: process.env.AGENT_OUTPUT_PATH ?? "./out.ts",
+          pathOutput: process.env.AGENT_OUTPUT_PATH ?? BSConfig.paths?.artifactOutput ?? "./out.ts",
         },
       },
     },

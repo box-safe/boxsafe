@@ -19,13 +19,17 @@ async function main() {
     // Build a minimal, typed options object for the loop segment.
     // Note: do not apply project-specific heuristics here — defer to the segment.
     const loops = BSConfig.limits?.loops;
+
+    const pathOutput = process.env.AGENT_OUTPUT_PATH ?? BSConfig.paths?.artifactOutput ?? "./out.ts";
+    const pathGeneratedMarkdown = process.env.BOXSAFE_MARKDOWN_PATH ?? BSConfig.paths?.generatedMarkdown ?? "./memo/generated/codelog.md";
     const opts: LoopOptions = {
       service: (BSConfig.model?.primary?.provider ?? LService.GOOGLE) as LService,
       model: (BSConfig.model?.primary?.name ?? LModel.GEMINI) as LModel,
       initialPrompt: BSConfig.interface?.prompt ?? "",
       cmd: BSConfig.commands?.run ?? "echo OK",
       lang: "ts",
-      pathOutput: process.env.AGENT_OUTPUT_PATH ?? "./out.ts",
+      pathOutput,
+      pathGeneratedMarkdown,
       workspace: BSConfig.project?.workspace ?? process.cwd(),
       ...(loops ? { maxIterations: loops, limit: loops } : {}),
     };

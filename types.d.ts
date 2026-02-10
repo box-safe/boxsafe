@@ -77,6 +77,11 @@ export interface TeachConfig {
   files?: string[];
 }
 
+export interface PathsConfig {
+  generatedMarkdown?: string;
+  artifactOutput?: string;
+}
+
 export interface BoxSafeConfig {
   project?: ProjectConfig;
   model?: ModelConfig;
@@ -85,5 +90,6 @@ export interface BoxSafeConfig {
   sandbox?: SandboxConfig;
   commands?: CommandsConfig;
   interface?: InterfaceConfig;
+  paths?: PathsConfig;
   teach?: TeachConfig;
 }
