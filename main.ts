@@ -7,59 +7,48 @@
 import { initSegments } from "@core/sgmnt/map";
 import logger from "@util/logger";
 
+// Minimal typed options for the loop segment
+type LoopOptions = {
+  service?: string;
+  model?: string;
+  initialPrompt?: string;
+  cmd?: string;
+  lang?: string;
+  pathOutput?: string;
+  workspace?: string;
+  maxIterations?: number;
+  limit?: number;
+  [key: string]: any;
+};
+
 async function main() {
-  logger.info("main", "Starting BoxSafe...");
+  logger.info("main", "Starting BoxSafe (minimal main)...");
 
   try {
-    // Initialize segments map and get run function
+    // Initialize and obtain the segment runner and configuration
     const { runSegment, BSConfig } = await initSegments();
-    logger.info("main", "Segments initialized");
 
-    // Log loaded config for debugging
-    logger.info("main", `Loaded config: model=${BSConfig.model?.primary?.name}, loops=${BSConfig.limits?.loops}`);
-    logger.info("main", `Test prompt: ${BSConfig.interface?.prompt}`);
-
-    // Prepare loop options from config
-    // try to infer target filename from prompt (Portuguese "chamado <name>")
-    // If a TODO is provided in config, prompt is not required — only infer when prompt exists
-    const promptRaw = BSConfig.interface?.prompt;
-    const promptText: string = promptRaw ? String(promptRaw).trim() : "";
-    let inferredFilename = "./test-output.js";
-    if (promptText) {
-      try {
-        const m = /chamado\s+([\w.\-/]+)/i.exec(promptText);
-        if (m && m[1]) inferredFilename = m[1];
-      } catch (e) {
-        // fallback remains
-      }
-    }
-
-    const loopOpts = {
+    // Build a minimal, typed options object for the loop segment.
+    // Note: do not apply project-specific heuristics here — defer to the segment.
+    const opts: LoopOptions = {
       service: BSConfig.model?.primary?.provider,
       model: BSConfig.model?.primary?.name,
-      initialPrompt: BSConfig.interface?.prompt ?? "",
-      cmd: "echo OK",
-      lang: "js",
-      pathOutput: inferredFilename,
+      initialPrompt: BSConfig.interface?.prompt ?? undefined,
+      cmd: BSConfig.interface?.cmd ?? undefined,
+      lang: BSConfig.interface?.lang ?? BSConfig.project?.lang ?? undefined,
+      pathOutput: BSConfig.interface?.pathOutput ?? undefined,
       workspace: BSConfig.project?.workspace ?? process.cwd(),
-      maxIterations: BSConfig.limits?.loops || 2,
-      limit: BSConfig.limits?.loops || 2,
+      maxIterations: BSConfig.limits?.loops,
+      limit: BSConfig.limits?.loops,
     };
 
-    logger.info("main", `Running loop segment with options: ${JSON.stringify(loopOpts, null, 2)}`);
+    logger.info("main", `Running loop segment`);
 
-    // Run the loop segment
-    const result = await runSegment("loop", loopOpts);
-    
-    logger.info("main", `Loop completed: ${JSON.stringify(result, null, 2)}`);
+    // Delegate execution to the segment runner (keep main minimal)
+    const result = await runSegment("loop", opts);
 
-    if (result?.ok) {
-      logger.info("main", "✓ Test passed!");
-      process.exit(0);
-    } else {
-      logger.error("main", "✗ Test failed!");
-      process.exit(1);
-    }
+    logger.info("main", `Loop completed: ${JSON.stringify(result)}`);
+    process.exit(result?.ok ? 0 : 1);
   } catch (err: any) {
     logger.error("main", `Fatal error: ${err?.message ?? err}`);
     process.exit(1);
