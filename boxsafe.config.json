@@ -52,7 +52,7 @@
 
   "interface": {
     "channel": "terminal",
-    "prompt": " crie um arquivo chamado love_test.js , nele adiciona o seguinte algoritimo, este algoritimo verifica se o usuario usa windows ou linux se for linux ele imprime no terminal 'I Love you' se for windows ele imprime 'I Hate you' commit o seguinte apos terminal 'second test with the agent done' .",
+    "prompt": "",
     "notifications": {
       "whatsapp": false,
       "telegram": false,

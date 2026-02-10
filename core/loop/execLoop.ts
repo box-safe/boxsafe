@@ -181,8 +181,8 @@ export const loop = async (
         log.info(`${ANSI.Yellow}[Tasks]${ANSI.Reset} todo path not found or not a file: ${todoCfg}`);
       }
     }
-  } catch (e) {
-    log.warn(`${ANSI.Yellow}[Tasks]${ANSI.Reset} failed to init tasks: ${e?.message ?? e}`);
+  } catch (error) {
+    log.warn(`${ANSI.Yellow}[Tasks]${ANSI.Reset} failed to init tasks: ${error}`);
     tasksManager = null;
   }
 
