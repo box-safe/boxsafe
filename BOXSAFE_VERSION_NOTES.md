@@ -2,12 +2,10 @@
 
 Commit message:
 
-chore: add git versioning module (boxsafe agent)
+save agent
 
 Summary:
 
-chore: add git versioning module (boxsafe agent)
+save agent
 
-core/loop/execLoop.ts
-core/loop/git/runVersionControlRunner.ts
-core/sgmnt/map.ts
+boxsafe.config.json
