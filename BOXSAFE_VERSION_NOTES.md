@@ -8,5 +8,6 @@ Summary:
 
 save agent
 
-main.ts
-test-output.js
+core/loop/execLoop.ts
+love_test.js
+memo/states-logs/logs.txt
