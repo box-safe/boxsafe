@@ -125,6 +125,7 @@ export const loop = async (
   } catch (err) {
     boxConfig = {};
   }
+  
 
   const vcBefore = Boolean(boxConfig.project?.versionControl?.before ?? false);
   const vcAfter = Boolean(boxConfig.project?.versionControl?.after ?? false);
@@ -316,7 +317,7 @@ export const loop = async (
               execCmd = `node ${newPath}`;
               log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} renamed output to ${newPath} for CommonJS compatibility`);
             } catch (e) {
-              log.warn(`${ANSI.Yellow}[Execode]${ANSI_Reset} failed to rename file for CJS: ${e?.message ?? e}`);
+              log.warn(`${ANSI.Yellow}[Execode]${ANSI.Reset} failed to rename file for CJS: ${e?.message ?? e}`);
             }
           }
         }
