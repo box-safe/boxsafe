@@ -31,15 +31,15 @@ async function main() {
     // Build a minimal, typed options object for the loop segment.
     // Note: do not apply project-specific heuristics here — defer to the segment.
     const opts: LoopOptions = {
-      service: BSConfig.model?.primary?.provider,
-      model: BSConfig.model?.primary?.name,
-      initialPrompt: BSConfig.interface?.prompt ?? undefined,
-      cmd: BSConfig.commands.run ?? undefined,
+      ...(BSConfig.model?.primary?.provider ? { service: BSConfig.model.primary.provider } : {}),
+      ...(BSConfig.model?.primary?.name ? { model: BSConfig.model.primary.name } : {}),
+      ...(BSConfig.interface?.prompt ? { initialPrompt: BSConfig.interface.prompt } : {}),
+      ...(BSConfig.commands?.run ? { cmd: BSConfig.commands.run } : {}),
       lang: "ts", // Default language for the loop segment
       pathOutput: process.env.AGENT_OUTPUT_PATH ?? "./out.ts",
       workspace: BSConfig.project?.workspace ?? process.cwd(),
-      maxIterations: BSConfig.limits?.loops,
-      limit: BSConfig.limits?.loops,
+      ...(typeof BSConfig.limits?.loops === 'number' ? { maxIterations: BSConfig.limits.loops } : {}),
+      ...(typeof BSConfig.limits?.loops === 'number' ? { limit: BSConfig.limits.loops } : {}),
     };
 
     logger.info("main", `Running loop segment`);

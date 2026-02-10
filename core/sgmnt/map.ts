@@ -4,8 +4,8 @@
  * Encapsulates all route logic in a single function.
  * No arguments required—all config comes from boxsafe.config.json and env.
  */
-import BSConfig from '@/boxsafe.config.json' assert { type: 'json' };
 import { ANSI } from "@/util/ANSI";
+import { loadBoxSafeConfig } from '@core/config/loadConfig';
 
 /**
  * Initialize segments map with all available routes.
@@ -13,6 +13,7 @@ import { ANSI } from "@/util/ANSI";
  * Returns { routes, runSegment } for use in the application.
  */
 export async function initSegments() {
+  const { config: BSConfig } = loadBoxSafeConfig();
   const routes: Record<string, any> = {
     loop: {
       handler: async (opts?: any) => {

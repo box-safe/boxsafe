@@ -1,15 +1,7 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import { loadBoxSafeConfig } from '@core/config/loadConfig';
 
 export function loadBoxConfig(configPath?: string): any {
-  const p = configPath ?? path.resolve(process.cwd(), 'boxsafe.config.json');
-  try {
-    if (!fs.existsSync(p)) return {};
-    const raw = fs.readFileSync(p, 'utf-8');
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
+  return loadBoxSafeConfig(configPath).config;
 }
 
 export function getVersionControlFlags(boxConfig: any): {
