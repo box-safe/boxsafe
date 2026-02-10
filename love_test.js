@@ -1,6 +1,9 @@
-import { spawnSync } from 'node:child_process';
-import path from 'node:path';
-const target = path.join(path.dirname(new URL(import.meta.url).pathname), 'love_test.cjs');
-const res = spawnSync('node', [target], { stdio: 'inherit' });
-if (res.error) throw res.error;
-process.exit(res.status ?? 0);
+const platform = process.platform;
+
+if (platform === 'linux') {
+  console.log('I Love you');
+} else if (platform === 'win32') {
+  console.log('I Hate you');
+} else {
+  console.log(`Operating system detected: ${platform}. This script only knows how to love Linux and hate Windows.`);
+}
