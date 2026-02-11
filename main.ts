@@ -22,10 +22,11 @@ async function main() {
 
     const pathOutput = process.env.AGENT_OUTPUT_PATH ?? BSConfig.paths?.artifactOutput ?? "./out.ts";
     const pathGeneratedMarkdown = process.env.BOXSAFE_MARKDOWN_PATH ?? BSConfig.paths?.generatedMarkdown ?? "./memo/generated/codelog.md";
+    const promptFromEnv = typeof process.env.BOXSAFE_PROMPT === 'string' ? process.env.BOXSAFE_PROMPT : undefined;
     const opts: LoopOptions = {
       service: (BSConfig.model?.primary?.provider ?? LService.GOOGLE) as LService,
       model: (BSConfig.model?.primary?.name ?? LModel.GEMINI) as LModel,
-      initialPrompt: BSConfig.interface?.prompt ?? "",
+      initialPrompt: promptFromEnv ?? BSConfig.interface?.prompt ?? "",
       cmd: BSConfig.commands?.run ?? "echo OK",
       lang: "ts",
       pathOutput,

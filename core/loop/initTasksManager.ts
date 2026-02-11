@@ -15,6 +15,12 @@ type AnsiLike = { Cyan: string; Yellow: string; Reset: string };
 export async function initTasksManager(boxConfig: any, log: Log, ANSI: AnsiLike): Promise<TasksManager | null> {
   let tasksManager: TasksManager | null = null;
   try {
+    const disableTasks = String(process.env.BOXSAFE_DISABLE_TASKS ?? '').toLowerCase();
+    if (disableTasks === 'true' || disableTasks === '1' || disableTasks === 'yes') {
+      log.info(`${ANSI.Yellow}[Tasks]${ANSI.Reset} tasks manager disabled by BOXSAFE_DISABLE_TASKS`);
+      return null;
+    }
+
     const todoCfg = boxConfig.project?.todo ? String(boxConfig.project?.todo).trim() : '';
     if (todoCfg) {
       const todoPath = path.resolve(todoCfg);
