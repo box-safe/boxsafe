@@ -1,7 +1,6 @@
 ```json-tool
-{"tool": "navigate", "params": {"op": "write", "path": "test.ts", "content": "console.log(\"sucess\");"}}
+{"tool": "navigate", "params": {"op": "write", "path": "test.ts", "content": "console.log(\"sucess\");\n"}}
 ```
 ```ts
-// Conteúdo do arquivo test.ts
 console.log("sucess");
 ```
