@@ -1,5 +1,5 @@
 ```json-tool
-{"tool": "navigate", "params": {"op": "write", "path": "test.ts", "content": "console.log(\"sucess\");\n"}}
+{"tool": "navigate", "params": {"op": "write", "path": "test.ts"}}
 ```
 ```ts
 console.log("sucess");
