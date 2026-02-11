@@ -6,6 +6,9 @@
  */
 import { ANSI } from "@/util/ANSI";
 import { loadBoxSafeConfig } from '@core/config/loadConfig';
+import { createLoopSegment } from '@core/sgmnt/loop';
+import { createNavigateSegment } from '@core/sgmnt/navigate';
+import { createVersionControlSegment } from '@core/sgmnt/versionControl';
 
 /**
  * Initialize segments map with all available routes.
@@ -15,36 +18,8 @@ import { loadBoxSafeConfig } from '@core/config/loadConfig';
 export async function initSegments() {
   const { config: BSConfig } = loadBoxSafeConfig();
   const routes: Record<string, any> = {
-    loop: {
-      handler: async (opts?: any) => {
-        const mod = await import("@core/loop/execLoop");
-        return mod.loop(opts);
-      },
-      meta: {
-        description: "Iterative LLM -> code -> exec loop",
-        implemented: true,
-        config: {
-          defaultLang: "ts",
-          pathOutput: process.env.AGENT_OUTPUT_PATH ?? BSConfig.paths?.artifactOutput ?? "./out.ts",
-        },
-      },
-    },
-    navigate: {
-      handler: async (params?: any) => {
-        const mod = await import("@core/navigate");
-        const workspace = BSConfig.project?.workspace ?? "./";
-        const handler = mod.createNavigatorHandler(workspace);
-        return handler.execute(params);
-      },
-      meta: {
-        description: "File system navigation with workspace boundary enforcement",
-        implemented: true,
-        config: {
-          workspace: BSConfig.project?.workspace ?? "./",
-          maxFileSize: 10 * 1024 * 1024,
-        },
-      },
-    },
+    loop: createLoopSegment(BSConfig),
+    navigate: createNavigateSegment(BSConfig),
     sandbox: null, // create
     model: {
       primary: BSConfig.model?.primary ?? null,
@@ -65,20 +40,7 @@ export async function initSegments() {
       urls: BSConfig.teach?.urls ?? null,
       files: BSConfig.teach?.files ?? null,
     },
-    versionControl: {
-      handler: async (params?: any) => {
-        const mod = await import('@core/loop/git');
-        return mod.runVersionControl(params ?? {});
-      },
-      meta: {
-        description: 'Versioning helper: commit, notes and optional push to origin',
-        implemented: true,
-        config: {
-          autoPushDefault: BSConfig.project?.versionControl?.after ?? false,
-          createNotesDefault: BSConfig.project?.versionControl?.generateNotes ?? false,
-        },
-      },
-    },
+    versionControl: createVersionControlSegment(BSConfig),
   };
 
   type RouteName = keyof typeof routes;
