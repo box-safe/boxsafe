@@ -22,20 +22,24 @@ export async function buildExecCommand({ cmd, lang, pathOutput, log, ANSI }: Bui
   // loop actually executes the produced artifact.
   let execCmd = cmd;
   if (typeof cmd === 'string' && cmd === 'echo OK') {
-    if (lang === 'ts') execCmd = `tsx ${pathOutput}`;
-    else if (lang === 'js') execCmd = `node ${pathOutput}`;
-    else if (lang === 'py' || lang === 'python') execCmd = `python ${pathOutput}`;
-    else if (lang === 'sh' || lang === 'bash' || lang === 'shell') execCmd = `bash ${pathOutput}`;
+    if (lang === 'ts') execCmd = ['tsx', [pathOutput]];
+    else if (lang === 'js') execCmd = ['node', [pathOutput]];
+    else if (lang === 'py' || lang === 'python') execCmd = ['python', [pathOutput]];
+    else if (lang === 'sh' || lang === 'bash' || lang === 'shell') execCmd = ['bash', [pathOutput]];
     else execCmd = `${pathOutput}`;
 
-    log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} auto-executing generated file with: ${execCmd}`);
+    const display = typeof execCmd === 'string' ? execCmd : Array.isArray(execCmd) ? `${execCmd[0]} ${execCmd[1].join(' ')}` : String(execCmd);
+    log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} auto-executing generated file with: ${display}`);
   }
 
   // If executing JS: check for CommonJS usage (require) and project type=module.
   try {
-    // normalize execCmd to string for detection (execCmd may be string or [cmd,args])
-    const execCmdStr = typeof execCmd === 'string' ? execCmd : Array.isArray(execCmd) ? String(execCmd[0]) : String(execCmd);
-    if (lang === 'js' && execCmdStr.startsWith('node ')) {
+    const isNodeExec =
+      lang === 'js' &&
+      ((typeof execCmd === 'string' && execCmd.trimStart().startsWith('node ')) ||
+        (Array.isArray(execCmd) && String(execCmd[0]) === 'node'));
+
+    if (isNodeExec) {
       const pkgPath = path.join(process.cwd(), 'package.json');
       let isModuleType = false;
       try {
@@ -53,7 +57,7 @@ export async function buildExecCommand({ cmd, lang, pathOutput, log, ANSI }: Bui
         const newPath = pathOutput.replace(/\.js$/, '.cjs');
         try {
           await fs.promises.rename(pathOutput, newPath);
-          execCmd = `node ${newPath}`;
+          execCmd = ['node', [newPath]];
           log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} renamed output to ${newPath} for CommonJS compatibility`);
           // create a minimal ESM wrapper at the original path so artifact exists
           try {

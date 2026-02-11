@@ -57,6 +57,7 @@ export interface CommandsConfig {
   setup?: string | null;
   run?: string | null;
   test?: string | null;
+  timeoutMs?: number | null;
 }
 
 export interface InterfaceNotifications {

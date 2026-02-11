@@ -90,6 +90,8 @@ export const loop = async (
   const { vcBefore, vcAfter, vcGenerateNotes, vcAutoPushConfig } = getVersionControlFlags(boxConfig);
   const attemptVersionControl = createVersionControlAttemptRunner(log, ANSI);
 
+  const configuredTimeoutMs = typeof boxConfig.commands?.timeoutMs === 'number' ? boxConfig.commands.timeoutMs : undefined;
+
   // If configured, run a one-time 'before' commit when the agent starts
   if (vcBefore) {
     try {
@@ -208,7 +210,9 @@ export const loop = async (
     try {
       if (signal?.aborted) throw new Error("Aborted");
       const execCmd = await buildExecCommand({ cmd, lang, pathOutput, log, ANSI });
-      execResult = await execode(execCmd);
+      execResult = await execode(execCmd, {
+        ...(configuredTimeoutMs !== undefined ? { timeoutMs: configuredTimeoutMs } : {}),
+      });
     } catch (err: any) {
       log.error(`${ANSI.Red}[Execode]${ANSI.Reset}`, err?.message ?? err);
       feedback = `Execution failed: ${err?.message ?? "unknown"}`;

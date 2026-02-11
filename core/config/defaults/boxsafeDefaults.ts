@@ -44,6 +44,7 @@ export const DEFAULT_BOXSAFE_CONFIG: BoxSafeConfig = {
     setup: 'npm install',
     run: 'echo OK',
     test: null,
+    timeoutMs: 60_000,
   },
   interface: {
     channel: 'terminal',
