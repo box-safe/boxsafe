@@ -1,119 +1,75 @@
 /**
- * Interprets a "prompt-system" markdown string, extracts the system prompt content,
- * and returns it as a clean string.
+ * Interpreta uma string Markdown, tipicamente de um contexto "prompt-system",
+ * e a transforma em uma string limpa, removendo toda a formatação Markdown.
  *
- * This function follows a two-tiered approach to find and clean the system prompt:
+ * Esta função realiza os seguintes passos de limpeza:
+ * 1. Remove blocos de código cercados (fenced code blocks), mantendo apenas o seu conteúdo.
+ * 2. Remove comentários HTML.
+ * 3. Remove a sintaxe de imagens (ex: `![alt text](url)` torna-se `alt text`).
+ * 4. Remove a sintaxe de links (ex: `[texto do link](url)` torna-se `texto do link`).
+ * 5. Remove marcadores de cabeçalho (ex: `# Cabeçalho` torna-se `Cabeçalho`).
+ * 6. Remove marcadores de citação (ex: `> Citação` torna-se `Citação`).
+ * 7. Remove marcadores de itens de lista (ex: `- Item`, `1. Item` torna-se `Item`),
+ *    e quaisquer espaços iniciais relacionados à indentação da lista.
+ * 8. Remove regras horizontais (ex: `---`).
+ * 9. Remove marcadores de negrito e itálico (ex: `**texto**`, `*texto*` torna-se `texto`).
+ * 10. Remove marcadores de código inline (ex: `` `código` `` torna-se `código`).
+ * 11. Reduz múltiplas linhas em branco consecutivas para no máximo duas (preserva quebras de parágrafo).
+ * 12. Remove espaços em branco iniciais/finais de cada linha e da string final.
  *
- * 1.  **Fenced Code Block Priority:** It first attempts to find the system prompt
- *     within a fenced code block explicitly marked with ````system```` or
- *     ````prompt-system```. Content within these blocks is treated as raw text
- *     and is cleaned by trimming each line and removing empty lines. This is the
- *     most robust method for clearly defined system prompts.
- *
- * 2.  **Heading Section Fallback:** If no such fenced code block is found, it
- *     then looks for a section introduced by a heading like `# System Prompt` or
- *     `## System Prompt`. All content following this heading, until another
- *     heading or a code block is encountered, is considered part of the system prompt.
- *     This content then undergoes a basic markdown cleanup process to remove common
- *     markdown syntax (e.g., bold/italic markers, link syntax, list markers).
- *
- * @param markdownInput The input markdown string potentially containing a system prompt.
- * @returns The cleaned system prompt as a string, or an empty string if no system prompt
- *          could be identified by either method.
+ * @param markdownString A string Markdown de entrada.
+ * @returns Uma string limpa com a formatação Markdown removida.
  */
-function extractSystemPrompt(markdownInput: string): string {
-    const lines = markdownInput.split('\n');
-    let inSystemBlock = false;
-    const systemPromptLines: string[] = [];
+function cleanMarkdownPrompt(markdownString: string): string {
+    let cleanedString = markdownString;
 
-    // --- Attempt 1: Extract from fenced code block (e.g., ```system) ---
-    // Define common fence types for system prompts
-    const systemBlockFences = ['```system', '```prompt-system'];
+    // 1. Lida com blocos de código cercados (fenced code blocks) primeiro: ```lang\ncode\n``` -> code
+    // Captura o conteúdo e substitui o bloco inteiro apenas pelo seu conteúdo.
+    cleanedString = cleanedString.replace(/^```[a-z]*\s*\n([\s\S]*?)\n```$/gm, (match, p1) => {
+        // Retorna o conteúdo do bloco de código, preservando suas quebras de linha internas.
+        return p1;
+    });
 
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+    // 2. Remove comentários HTML: <!-- comentário -->
+    cleanedString = cleanedString.replace(/<!--[\s\S]*?-->/g, '');
 
-        // Check if we are starting a system block
-        const isStartFence = systemBlockFences.some(fence => line.startsWith(fence));
-        if (isStartFence && !inSystemBlock) {
-            inSystemBlock = true;
-            continue; // Skip the fence line itself
-        }
+    // 3. Remove Imagens: `![alt text](url)` -> `alt text`
+    cleanedString = cleanedString.replace(/!\[(.*?)\]\(.*?\)/g, '$1');
 
-        // Check if we are ending a system block
-        const isEndFence = line.startsWith('```') && inSystemBlock;
-        if (isEndFence && inSystemBlock) {
-            inSystemBlock = false;
-            // Join collected lines, trim each, filter out purely empty ones, then trim the whole result.
-            // This preserves internal line breaks but cleans up leading/trailing whitespace and blank lines.
-            return systemPromptLines.map(l => l.trim()).filter(l => l.length > 0).join('\n').trim();
-        }
+    // 4. Remove Links: `[link text](url)` -> `link text`
+    cleanedString = cleanedString.replace(/\[(.*?)\]\(.*?\)/g, '$1');
 
-        // If we are inside the block, collect the original line (to preserve internal spacing before final trim)
-        if (inSystemBlock) {
-            systemPromptLines.push(lines[i]);
-        }
-    }
+    // 5. Remove Cabeçalhos: `# Header` -> `Header`
+    cleanedString = cleanedString.replace(/^(#+)\s*(.*)$/gm, '$2');
 
-    // --- Attempt 2: Extract from "System Prompt" heading section (if no fenced block was found) ---
-    let inHeadingSection = false;
-    // Define possible headings for a system prompt section
-    const headingMarkers = ['# System Prompt', '## System Prompt'];
-    const extractedSectionLines: string[] = [];
+    // 6. Remove Citações em Bloco: `> Quote` -> `Quote`
+    cleanedString = cleanedString.replace(/^>\s*(.*)$/gm, '$1');
 
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+    // 7. Remove marcadores de itens de lista: `- Item`, `* Item`, `1. Item` -> `Item`
+    // Remove quaisquer espaços iniciais relacionados à indentação, o marcador de lista e um espaço.
+    cleanedString = cleanedString.replace(/^\s*(?:[-*+]|\d+\.)\s*/gm, '');
 
-        // Check if we've found the system prompt heading
-        if (!inHeadingSection && headingMarkers.includes(line)) {
-            inHeadingSection = true;
-            continue; // Skip the heading line itself
-        }
+    // 8. Remove Regras Horizontais: `---`, `***`, `___`
+    cleanedString = cleanedString.replace(/^((\s*[-*_]){3,})\s*$/gm, '');
 
-        if (inHeadingSection) {
-            // Stop collecting if another heading (any level) or a code block starts
-            // as these typically delineate the end of a section.
-            if ((line.startsWith('#') && line.split(' ')[0].match(/^#+$/)) || line.startsWith('```')) {
-                break;
-            }
-            extractedSectionLines.push(lines[i]); // Collect original line to preserve spacing before cleanup
-        }
-    }
+    // 9. Remove Negrito/Itálico (não-guloso)
+    // `**texto**` ou `__texto__`
+    cleanedString = cleanedString.replace(/(\*\*|__)(.*?)\1/g, '$2');
+    // `*texto*` ou `_texto_`
+    cleanedString = cleanedString.replace(/(\*|_)(.*?)\1/g, '$2');
 
-    if (extractedSectionLines.length > 0) {
-        let cleanedContent = extractedSectionLines.join('\n');
+    // 10. Remove Código Inline: `` `code` `` -> `code`
+    cleanedString = cleanedString.replace(/`([^`]+)`/g, '$1');
 
-        // Apply basic markdown cleanup for content found in a heading section.
-        // The order of replacements can be important for overlapping syntax.
+    // 11. Limpa quebras de linha excessivas: reduz 3 ou mais quebras de linha para 2
+    // (mantém quebras de parágrafo claras sem linhas em branco excessivas).
+    cleanedString = cleanedString.replace(/\n{3,}/g, '\n\n');
 
-        // Remove fenced code blocks (as a safeguard, though they should terminate the section)
-        cleanedContent = cleanedContent.replace(/```[\s\S]*?```/g, '');
-        // Remove inline code backticks (e.g., `code example`) -> code example
-        cleanedContent = cleanedContent.replace(/`([^`]+)`/g, '$1');
-        // Remove link syntax [text](url) -> text
-        cleanedContent = cleanedContent.replace(/\[(.*?)\]\(.*?\)/g, '$1');
-        // Remove image syntax ![alt text](url) -> alt text
-        cleanedContent = cleanedContent.replace(/!\[(.*?)\]\(.*?\)/g, '$1');
-        // Remove bold/italic markers (e.g., **bold**, *italic*, __bold__, _italic_)
-        cleanedContent = cleanedContent.replace(/(\*\*|__)(.*?)\1/g, '$2'); // **bold** or __bold__
-        cleanedContent = cleanedContent.replace(/(\*|_)(.*?)\1/g, '$2');     // *italic* or _italic_
+    // 12. Limpa espaços em branco (trim) em cada linha e na string final.
+    // Primeiro, remove espaços em branco iniciais/finais de cada linha.
+    cleanedString = cleanedString.split('\n').map(line => line.trim()).join('\n');
+    // Depois, remove espaços em branco iniciais/finais de toda a string.
+    cleanedString = cleanedString.trim();
 
-        // Remove blockquote markers (e.g., > This is a quote) -> This is a quote
-        cleanedContent = cleanedContent.replace(/^>\s*/gm, '');
-        // Remove list item markers (e.g., - Item, * Item, 1. Item)
-        cleanedContent = cleanedContent.replace(/^[*-]\s+/gm, '');
-        cleanedContent = cleanedContent.replace(/^\d+\.\s+/gm, ''); // Numbered lists
-
-        // Normalize whitespace: split into lines, trim each line, filter out purely empty lines,
-        // then rejoin with single newlines and trim the entire result.
-        return cleanedContent
-            .split('\n')
-            .map(l => l.trim())
-            .filter(l => l.length > 0)
-            .join('\n')
-            .trim();
-    }
-
-    // If neither method found any system prompt content, return an empty string.
-    return '';
+    return cleanedString;
 }
