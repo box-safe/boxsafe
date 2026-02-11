@@ -1,4 +1,3 @@
-```ts
 /**
  * Interprets a "prompt-system" markdown string, extracts the system prompt content,
  * and returns it as a clean string.
@@ -118,4 +117,3 @@ function extractSystemPrompt(markdownInput: string): string {
     // If neither method found any system prompt content, return an empty string.
     return '';
 }
-```
