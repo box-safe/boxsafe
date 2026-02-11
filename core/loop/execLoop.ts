@@ -28,7 +28,7 @@ import { runLLM } from "@ai/caller";
 import { LService, LModel } from "@ai/label";
 import { extractCode } from "@/util/extractCode";
 import type { CommandRun } from "@/types";
-import { execode } from "@core/cmd/execode";
+import { execode } from "@/core/loop/cmd/execode";
 import { ANSI } from "@util/ANSI";
 import { createNavigator } from "@core/navigate";
 import type { Navigator } from "@core/navigate";
