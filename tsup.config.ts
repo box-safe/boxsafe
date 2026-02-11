@@ -6,6 +6,7 @@ export default defineConfig({
     'core/**/*.ts',
     'box/**/*.ts',
     'util/**/*.ts',
+    'adapters/**/*.ts'
   ],
   format: ['cjs', 'esm'],
   dts: true,

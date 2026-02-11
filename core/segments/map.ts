@@ -6,9 +6,9 @@
  */
 import { ANSI } from "@/util/ANSI";
 import { loadBoxSafeConfig } from '@core/config/loadConfig';
-import { createLoopSegment } from '@core/sgmnt/loop';
-import { createNavigateSegment } from '@core/sgmnt/navigate';
-import { createVersionControlSegment } from '@core/sgmnt/versionControl';
+import { createLoopSegment } from './loop';
+import { createNavigateSegment } from './navigate';
+import { createVersionControlSegment } from './versionControl';
 
 /**
  * Initialize segments map with all available routes.

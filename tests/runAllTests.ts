@@ -13,6 +13,8 @@ async function run() {
   let failed = 0;
 
   const files = [
+    './tests/ports.test.ts',
+    './tests/adapters.test.ts',
     './tests/extractCode.test.ts',
     './tests/navigatorBoundary.test.ts',
     './tests/waterfall.test.ts',

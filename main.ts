@@ -4,7 +4,7 @@
  * Tests the segmentation system with the loop segment.
  */
 
-import { initSegments } from "@core/sgmnt/map";
+import { initSegments } from "@core/segments/map";
 import logger from "@util/logger";
 import type { LoopOptions } from "@core/loop/types";
 import { LService, LModel } from "@ai/label";
