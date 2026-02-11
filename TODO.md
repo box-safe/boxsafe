@@ -1,10 +1,8 @@
 lembrete usar arquitetura Hexagonal no projeto 
 
 
-15. melhorar observabilidade do loop: IDs por iteração, logs estruturados, e persistência de artifacts por iteração (opcional)
+16. tool para busca inteligente, o modelo não sabe aonde um metodo ou função em expecifica ou qualquer coisa dentro do de um codigo esta mas ele consegue de forma inteligente so por um trecho do codigo achar, 
 
 
-
-16. criar um sistema de busca por codigo obriagando o modelo indetifica o codigo, exemplo isso ajuda quando  
 
 17. criar sis

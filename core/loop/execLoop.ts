@@ -42,6 +42,7 @@ import { writeArtifactAtomically } from './writeArtifactAtomically';
 import { buildExecCommand } from './buildExecCommand';
 import { runValidation } from './runValidation';
 import type { LoopOptions, LoopResult } from './types';
+import { createTraceLogger } from './traceLogger';
 
 /**
  * Create a navigator instance with the given workspace.
@@ -80,7 +81,15 @@ export const loop = async (
   } : LoopOptions
 ): Promise<LoopResult> => {
   const llm = createLLM(service, model);
-  const log = logger ?? console;
+  const trace = createTraceLogger({});
+  const baseLog = logger ?? console;
+  const log = trace.wrapLogger(baseLog);
+  await trace.emit('loop.start', { runId: trace.runId }, {
+    service: String(service),
+    model: String(model),
+    lang: String(lang),
+    maxIterations: Number(maxIterations),
+  });
 
   // Version control: configurable commit messages and behavior
   // Top-level variable for the 'before' commit message so it's easy to find and change.
@@ -95,10 +104,13 @@ export const loop = async (
   // If configured, run a one-time 'before' commit when the agent starts
   if (vcBefore) {
     try {
+      await trace.emit('versionControl.before.start', { runId: trace.runId });
       const res = await attemptVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: BEFORE_COMMIT_MESSAGE, autoPush: vcAutoPushConfig, generateNotes: vcGenerateNotes });
       log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} before-commit completed: ${JSON.stringify(res)}`);
+      await trace.emit('versionControl.before.ok', { runId: trace.runId }, { result: res as any });
     } catch (err: any) {
       log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} before-commit failed after retries: ${err?.message ?? err}`);
+      await trace.emit('versionControl.before.error', { runId: trace.runId }, { error: err?.message ?? String(err) });
     }
   }
 
@@ -122,12 +134,16 @@ export const loop = async (
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   for (limit = 1; limit <= effectiveLimit; limit++) {
+    const iterCtx = { runId: trace.runId, iter: limit };
+    const iterLog = trace.wrapLogger(baseLog, iterCtx);
     if (signal?.aborted) {
-      log.error(`${ANSI.Red}[Agent]${ANSI.Reset} aborted`);
+      iterLog.error(`${ANSI.Red}[Agent]${ANSI.Reset} aborted`);
+      await trace.emit('loop.aborted', iterCtx);
       return { ok: false, iterations: limit, navigator };
     }
 
-    log.info(`${ANSI.Cyan}[Agent]${ANSI.Reset} iteration ${limit}`);
+    iterLog.info(`${ANSI.Cyan}[Agent]${ANSI.Reset} iteration ${limit}`);
+    await trace.emit('iteration.start', iterCtx);
 
     // Run the LLM with the current feedback (with a small retry/backoff for transient LLM errors)
     let llmAttempts = 0;
@@ -136,12 +152,16 @@ export const loop = async (
       try {
         if (signal?.aborted) throw new Error("Aborted");
         const promptToSend = `${feedback}\n\nYou may optionally emit tool calls as JSON fenced blocks (\`\`\`json-tool ...\`\`\`) BEFORE the final code block. If you do, set tool=\"navigate\" and params.op=\"write\" to create files. Then, ALWAYS end your response with exactly ONE code block in the language: ${lang}`;
+        await trace.emit('llm.run.start', iterCtx);
         await runLLM(promptToSend, llm, { service, model, outputPath: pathGeneratedMarkdown });
+        await trace.emit('llm.run.ok', iterCtx, { outputPath: pathGeneratedMarkdown });
         break;
       } catch (err: any) {
         llmAttempts++;
-        log.error(`${ANSI.Red}[LLM Runner]${ANSI.Reset}`, err?.message ?? err);
+        iterLog.error(`${ANSI.Red}[LLM Runner]${ANSI.Reset}`, err?.message ?? err);
+        await trace.emit('llm.run.error', iterCtx, { error: err?.message ?? String(err), attempt: llmAttempts });
         if (llmAttempts >= maxLlmAttempts) {
+          await trace.emit('iteration.failed', iterCtx, { layer: 'llm' });
           return { ok: false, iterations: limit, navigator };
         }
         const backoff = 200 * Math.pow(2, llmAttempts - 1);
@@ -154,8 +174,10 @@ export const loop = async (
     try {
       if (signal?.aborted) throw new Error("Aborted");
       markdown = await readMarkdown(pathGeneratedMarkdown);
+      await trace.emit('markdown.read.ok', iterCtx, { path: pathGeneratedMarkdown, bytes: markdown.length });
     } catch (err: any) {
-      log.error(`${ANSI.Red}[ReadMarkdown]${ANSI.Reset}`, err?.message ?? err);
+      iterLog.error(`${ANSI.Red}[ReadMarkdown]${ANSI.Reset}`, err?.message ?? err);
+      await trace.emit('markdown.read.error', iterCtx, { error: err?.message ?? String(err), path: pathGeneratedMarkdown });
       // give feedback to the model and retry
       feedback = "Could not read the generated markdown. Please emit markdown artifact.";
       continue;
@@ -168,8 +190,10 @@ export const loop = async (
       codeBlocks = await extractCode(markdown, lang, {
         throwOnNotFound: true,
       });
+      await trace.emit('extractCode.ok', iterCtx, { blocks: codeBlocks.length, lang: String(lang) });
     } catch (err: any) {
-      log.warn(`${ANSI.Yellow}[ExtractCode]${ANSI.Reset}`, err?.message ?? err);
+      iterLog.warn(`${ANSI.Yellow}[ExtractCode]${ANSI.Reset}`, err?.message ?? err);
+      await trace.emit('extractCode.error', iterCtx, { error: err?.message ?? String(err), lang: String(lang) });
       feedback = "No code blocks were found. Generate valid code for the requested language.";
       continue;
     }
@@ -179,10 +203,12 @@ export const loop = async (
       markdown,
       navigator,
       boxConfig,
-      log,
+      log: iterLog,
       ANSI,
       attemptVersionControl,
       vcAutoPushConfig,
+      traceEmit: trace.emit,
+      traceCtx: iterCtx,
     });
 
     if (!codeBlocks || codeBlocks.length === 0) {
@@ -199,8 +225,10 @@ export const loop = async (
         content: codeBlocks.join("\n\n"),
         ...(signal ? { signal } : {}),
       });
+      await trace.emit('artifact.write.ok', iterCtx, { path: pathOutput, bytes: codeBlocks.join("\n\n").length });
     } catch (err: any) {
-      log.error(`${ANSI.Red}[WriteFile]${ANSI.Reset}`, err?.message ?? err);
+      iterLog.error(`${ANSI.Red}[WriteFile]${ANSI.Reset}`, err?.message ?? err);
+      await trace.emit('artifact.write.error', iterCtx, { error: err?.message ?? String(err), path: pathOutput });
       feedback = "Failed to write output file. Ensure filesystem permissions are correct.";
       continue;
     }
@@ -210,11 +238,14 @@ export const loop = async (
     try {
       if (signal?.aborted) throw new Error("Aborted");
       const execCmd = await buildExecCommand({ cmd, lang, pathOutput, log, ANSI });
+      await trace.emit('exec.start', iterCtx, { cmd: Array.isArray(execCmd) ? execCmd[0] : execCmd });
       execResult = await execode(execCmd, {
         ...(configuredTimeoutMs !== undefined ? { timeoutMs: configuredTimeoutMs } : {}),
       });
+      await trace.emit('exec.ok', iterCtx, { exitCode: execResult.exitCode });
     } catch (err: any) {
-      log.error(`${ANSI.Red}[Execode]${ANSI.Reset}`, err?.message ?? err);
+      iterLog.error(`${ANSI.Red}[Execode]${ANSI.Reset}`, err?.message ?? err);
+      await trace.emit('exec.error', iterCtx, { error: err?.message ?? String(err) });
       feedback = `Execution failed: ${err?.message ?? "unknown"}`;
       continue;
     }
@@ -237,21 +268,31 @@ export const loop = async (
     // Validate execution results using the waterfall pipeline
     let verdict: any;
     try {
+      await trace.emit('validation.start', iterCtx);
       verdict = await runValidation({
         execResult,
         pathOutput,
         ...(signal ? { signal } : {}),
-        log,
+        log: iterLog,
         ANSI,
       });
+      await trace.emit('validation.ok', iterCtx, {
+        ok: Boolean(verdict?.ok),
+        score: typeof verdict?.score === 'number' ? verdict.score : undefined,
+        layer: verdict?.layer ?? undefined,
+      });
     } catch (err: any) {
+      await trace.emit('validation.error', iterCtx, { error: err?.message ?? String(err) });
       feedback = `Validation pipeline failed: ${err?.message ?? "unknown"}`;
       continue;
     }
 
     // Stop or advance if the execution is valid
     if (verdict?.ok) {
-      log.info(`${ANSI.Green}[Agent]${ANSI.Reset} success for current task/iteration`);
+      iterLog.info(`${ANSI.Green}[Agent]${ANSI.Reset} success for current task/iteration`);
+      await trace.emit('iteration.success', iterCtx, {
+        score: typeof verdict?.score === 'number' ? verdict.score : undefined,
+      });
 
       // If task manager is active, mark current done and continue to next
       if (tasksManager) {
@@ -271,10 +312,13 @@ export const loop = async (
       if (vcAfter) {
         const afterMessage = `agent: completed successfully in ${limit} iterations`;
         try {
+          await trace.emit('versionControl.after.start', iterCtx);
           const res = await attemptVersionControl({ repoPath: workspace ?? process.cwd(), commitMessage: afterMessage, autoPush: vcAutoPushConfig, generateNotes: vcGenerateNotes });
           log.info(`${ANSI.Cyan}[VersionControl]${ANSI.Reset} after-commit completed: ${JSON.stringify(res)}`);
+          await trace.emit('versionControl.after.ok', iterCtx, { result: res as any });
         } catch (err: any) {
           log.warn(`${ANSI.Yellow}[VersionControl]${ANSI.Reset} after-commit failed after retries: ${err?.message ?? err}`);
+          await trace.emit('versionControl.after.error', iterCtx, { error: err?.message ?? String(err) });
         }
       }
 
@@ -284,7 +328,12 @@ export const loop = async (
     // Build structured feedback for the next iteration
     feedback = `Layer: ${verdict?.layer ?? "unknown"}\nReason: ${verdict?.reason ?? "unknown"}\nDetails: ${verdict?.details ?? "n/a"}`;
 
-    log.warn(`${ANSI.Yellow}[Waterfall]${ANSI.Reset} failed at ${verdict?.layer ?? "unknown"}`);
+    iterLog.warn(`${ANSI.Yellow}[Waterfall]${ANSI.Reset} failed at ${verdict?.layer ?? "unknown"}`);
+    await trace.emit('iteration.failed', iterCtx, {
+      layer: verdict?.layer ?? 'unknown',
+      reason: verdict?.reason ?? 'unknown',
+      score: typeof verdict?.score === 'number' ? verdict.score : undefined,
+    });
   }
 
   // If the loop completes without a successful verdict
