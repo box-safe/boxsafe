@@ -52,7 +52,7 @@
 
   "interface": {
     "channel": "terminal",
-    "prompt": "crie um arquivo chamado test.ts este arquivo deve imprimeir sucess no terminal apenas isso",
+    "prompt": "cria um codigo para interpretar um md de prompt-system ele pega este md tranforma em um string e retorna ele limpo com output que é um string",
     "notifications": {
       "whatsapp": false,
       "telegram": false,
