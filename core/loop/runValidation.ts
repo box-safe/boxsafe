@@ -1,20 +1,15 @@
 import { waterfall } from '@core/loop/waterfall';
+import { Logger } from '@core/util/logger';
 
-type Log = {
-  error: (...args: any[]) => void;
-};
-
-type AnsiLike = { Red: string; Reset: string };
+const logger = Logger.createModuleLogger('RunValidation');
 
 type RunValidationArgs = {
   execResult: any;
   pathOutput: string;
   signal?: AbortSignal;
-  log: Log;
-  ANSI: AnsiLike;
 };
 
-export async function runValidation({ execResult, pathOutput, signal, log, ANSI }: RunValidationArgs): Promise<any> {
+export async function runValidation({ execResult, pathOutput, signal }: RunValidationArgs): Promise<any> {
   if (signal?.aborted) throw new Error('Aborted');
   try {
     return await waterfall({
@@ -24,7 +19,7 @@ export async function runValidation({ execResult, pathOutput, signal, log, ANSI 
       },
     });
   } catch (err: any) {
-    log.error(`${ANSI.Red}[Waterfall]${ANSI.Reset}`, err?.message ?? err);
+    logger.error(`Waterfall error: ${err?.message ?? err}`);
     throw err;
   }
 }

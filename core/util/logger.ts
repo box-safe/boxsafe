@@ -1,8 +1,8 @@
 export enum LogLevel {
-    DEBUG = 0,
-    INFO = 1,
-    WARN = 2,
-    ERROR = 3,
+    DEBUG = 1,
+    INFO,
+    WARN,
+    ERROR,
 }
 
 export interface LogEntry {
@@ -13,9 +13,9 @@ export interface LogEntry {
 }
 
 export class Logger {
-    private static instance: Logger;
-    private currentLevel: LogLevel;
-    private moduleName: string;
+    private static instance: Logger; // it the class itself 
+    private currentLevel: LogLevel; // current log level
+    private moduleName: string; // module name
 
     // ANSI color codes - simplificado para melhor legibilidade
     private static readonly COLORS = {
@@ -33,14 +33,14 @@ export class Logger {
         [LogLevel.ERROR]: 'ERROR',
     };
 
-    constructor(moduleName: string = 'root', level: LogLevel = LogLevel.INFO) {
+    constructor(moduleName: string = 'Core', level: LogLevel = LogLevel.INFO) {
         this.moduleName = moduleName;
         this.currentLevel = level;
     }
 
-    static getInstance(moduleName?: string, level?: LogLevel): Logger {
+    static getInstance(moduleName?: string, level?: LogLevel): Logger {  // create singleton instance
         if (!Logger.instance) {
-            Logger.instance = new Logger(moduleName || 'root', level);
+            Logger.instance = new Logger(moduleName || 'Core', level);
         }
         return Logger.instance;
     }
@@ -88,22 +88,22 @@ export class Logger {
 
     // Static methods for quick access
     static debug(message: string, moduleName?: string): void {
-        const logger = new Logger(moduleName || 'root');
+        const logger = new Logger(moduleName || 'Core');
         logger.debug(message);
     }
 
     static info(message: string, moduleName?: string): void {
-        const logger = new Logger(moduleName || 'root');
+        const logger = new Logger(moduleName || 'Core');
         logger.info(message);
     }
 
     static warn(message: string, moduleName?: string): void {
-        const logger = new Logger(moduleName || 'root');
+        const logger = new Logger(moduleName || 'Core');
         logger.warn(message);
     }
 
     static error(message: string, moduleName?: string): void {
-        const logger = new Logger(moduleName || 'root');
+        const logger = new Logger(moduleName || 'Core');
         logger.error(message);
     }
 
@@ -114,7 +114,10 @@ export class Logger {
 }
 
 // Export a default logger instance
-export const logger = Logger.getInstance();
+export const logger = Logger.getInstance(); 
+/*
+just one instance for anything
+*/ 
 
 // Export convenience functions
 export const log = {

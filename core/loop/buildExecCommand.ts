@@ -1,10 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-
-type Log = {
-  info: (...args: any[]) => void;
-  warn: (...args: any[]) => void;
-};
+import { Logger } from '@core/util/logger';
+import { ANSI } from '@util/ANSI';
 
 type AnsiLike = { Cyan: string; Yellow: string; Reset: string };
 
@@ -12,11 +9,11 @@ type BuildExecCommandArgs = {
   cmd: any;
   lang: string;
   pathOutput: string;
-  log: Log;
-  ANSI: AnsiLike;
 };
 
-export async function buildExecCommand({ cmd, lang, pathOutput, log, ANSI }: BuildExecCommandArgs): Promise<any> {
+const logger = Logger.createModuleLogger('BuildExecCommand');
+
+export async function buildExecCommand({ cmd, lang, pathOutput }: BuildExecCommandArgs): Promise<any> {
   // If caller left the default `echo OK`, automatically run the
   // generated output file according to the requested language so the
   // loop actually executes the produced artifact.
@@ -29,7 +26,7 @@ export async function buildExecCommand({ cmd, lang, pathOutput, log, ANSI }: Bui
     else execCmd = `${pathOutput}`;
 
     const display = typeof execCmd === 'string' ? execCmd : Array.isArray(execCmd) ? `${execCmd[0]} ${execCmd[1].join(' ')}` : String(execCmd);
-    log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} auto-executing generated file with: ${display}`);
+    logger.info(`auto-executing generated file with: ${display}`);
   }
 
   // If executing JS: check for CommonJS usage (require) and project type=module.
@@ -58,7 +55,7 @@ export async function buildExecCommand({ cmd, lang, pathOutput, log, ANSI }: Bui
         try {
           await fs.promises.rename(pathOutput, newPath);
           execCmd = ['node', [newPath]];
-          log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} renamed output to ${newPath} for CommonJS compatibility`);
+          logger.info(`renamed output to ${newPath} for CommonJS compatibility`);
           // create a minimal ESM wrapper at the original path so artifact exists
           try {
             const wrapper = `import { spawnSync } from 'node:child_process';\nimport path from 'node:path';\nconst target = path.join(path.dirname(new URL(import.meta.url).pathname), '${path.basename(newPath)}');\nconst res = spawnSync('node', [target], { stdio: 'inherit' });\nif (res.error) throw res.error;\nprocess.exit(res.status ?? 0);\n`;
@@ -67,7 +64,7 @@ export async function buildExecCommand({ cmd, lang, pathOutput, log, ANSI }: Bui
             // ignore
           }
         } catch {
-          log.warn(`${ANSI.Yellow}[Execode]${ANSI.Reset} failed to rename file`);
+          logger.warn(`failed to rename file`);
         }
       }
     }

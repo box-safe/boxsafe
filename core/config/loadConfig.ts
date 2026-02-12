@@ -1,7 +1,74 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { BoxSafeConfig } from '@/types';
-import { DEFAULT_BOXSAFE_CONFIG } from './defaults';
+import { DEFAULT_BOXSAFE_CONFIG } from '@core/config/defaults';
+
+// Tipos locais para manter independência do core
+export interface BoxSafeConfig {
+  project?: {
+    workspace?: string;
+    testDir?: string;
+    versionControl?: {
+      before?: boolean;
+      after?: boolean;
+      autoPush?: boolean;
+      generateNotes?: boolean;
+    };
+  };
+  model?: {
+    primary?: {
+      provider?: string;
+      name?: string;
+    };
+    fallback?: any[];
+    endpoint?: any;
+    parameters?: Record<string, any>;
+  };
+  smartRotation?: {
+    enabled?: boolean;
+    simple?: any[];
+    complex?: any[];
+  };
+  limits?: {
+    tokens?: number;
+    loops?: number;
+    timeout?: {
+      enabled?: boolean;
+      duration?: string;
+      notify?: boolean;
+    };
+  };
+  sandbox?: {
+    enabled?: boolean;
+    engine?: string;
+    memory?: string;
+    cpu?: number;
+    network?: string;
+  };
+  commands?: {
+    setup?: string;
+    run?: string;
+    test?: string | null;
+    timeoutMs?: number;
+  };
+  interface?: {
+    channel?: string;
+    prompt?: string;
+    notifications?: {
+      whatsapp?: boolean;
+      telegram?: boolean;
+      slack?: boolean;
+      email?: boolean;
+    };
+  };
+  paths?: {
+    generatedMarkdown?: string;
+    artifactOutput?: string;
+  };
+  teach?: {
+    urls?: string[];
+    files?: string[];
+  };
+}
 
 export type NormalizedBoxSafeConfig = Omit<BoxSafeConfig, 'limits'> & {
   limits?: Omit<NonNullable<BoxSafeConfig['limits']>, 'loops'> & {

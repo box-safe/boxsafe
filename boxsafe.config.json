@@ -4,8 +4,8 @@
     "testDir": "./",
     "todo":"./TODO.md",
     "versionControl": {
-      "before": true,
-      "after": true,
+      "before": false,
+      "after": false,
       "generateNotes": true
     }
   },
@@ -52,7 +52,7 @@
 
   "interface": {
     "channel": "terminal",
-    "prompt": "cria um codigo para interpretar um md de prompt-system ele pega este md tranforma em um string e retorna ele limpo com output que é um string",
+    "prompt": "crie um arquivo chamado lv_test.ts, este arquivo deve imprimir hello world no terminal ",
     "notifications": {
       "whatsapp": false,
       "telegram": false,

@@ -1,5 +1,8 @@
 import { createNavigator } from '@core/navigate';
 import type { Navigator } from '@core/navigate';
+import { Logger } from '@core/util/logger';
+
+const logger = Logger.createModuleLogger('InitNavigator');
 
 type InitNavigatorArgs = {
   workspaceArg?: string;
@@ -12,6 +15,13 @@ export function initNavigator({ workspaceArg, configWorkspace, injectedNavigator
   navigator: Navigator | null;
 } {
   const effectiveWorkspace = workspaceArg ?? configWorkspace ?? process.cwd();
-  const navigator = injectedNavigator ?? (effectiveWorkspace ? createNavigator({ workspace: effectiveWorkspace }) : null);
+  
+  logger.debug(`Creating navigator with workspace: ${effectiveWorkspace}`);
+  
+  const navigator = injectedNavigator ?? (effectiveWorkspace ? createNavigator({ 
+    workspace: effectiveWorkspace,
+    logger: Logger.createModuleLogger('Navigator')
+  }) : null);
+  
   return { effectiveWorkspace, navigator };
 }

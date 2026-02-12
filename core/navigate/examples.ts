@@ -8,6 +8,7 @@
 
 import { createNavigator, createNavigatorHandler } from '@core/navigate';
 import type { DirectoryListing, FileReadResult, FileWriteResult, MetadataResult } from '@core/navigate';
+import { Logger } from '@core/util/logger';
 
 // Type guards for proper narrowing
 const isDirectory = (result: any): result is DirectoryListing => result.ok && 'entries' in result;
@@ -16,9 +17,9 @@ const isFileWrite = (result: any): result is FileWriteResult => result.ok && 'cr
 const isMetadata = (result: any): result is MetadataResult => result.ok && 'stat' in result;
 const isError = (result: any): result is { ok: false; error: string } => !result.ok;
 
-// ============================================================================
+const logger = Logger.createModuleLogger('NavigateExamples');
+
 // Example 1: Basic Setup and Directory Listing
-// ============================================================================
 
 async function example1_BasicListingAndExploration() {
   const nav = createNavigator({
@@ -28,18 +29,18 @@ async function example1_BasicListingAndExploration() {
   // List root workspace
   const root = await nav.listDirectory('.');
   if (isDirectory(root)) {
-    console.log(`Workspace has ${root.total} items:`);
+    logger.info(`Workspace has ${root.total} items:`);
     root.entries.forEach((entry) => {
       const icon = entry.type === 'directory' ? '📁' : '📄';
       const size = entry.size ? ` (${entry.size} bytes)` : '';
-      console.log(`  ${icon} ${entry.name}${size}`);
+      logger.info(`  ${icon} ${entry.name}${size}`);
     });
   }
 
   // Navigate to specific directory
   const srcDir = await nav.listDirectory('src');
   if (isDirectory(srcDir)) {
-    console.log(`\nFound ${srcDir.total} items in src/`);
+    logger.info(`Found ${srcDir.total} items in src/`);
   }
 }
 
@@ -60,14 +61,14 @@ async function example2_ReadMultipleFilesForLLMAnalysis() {
     const result = await nav.readFile(file);
     if (isFileRead(result)) {
       contents[file] = result.content;
-      console.log(`Loaded ${file} (${result.size} bytes)`);
+      logger.info(`Loaded ${file} (${result.size} bytes)`);
     } else if (!result.ok) {
-      console.error(`Failed to read ${file}: ${result.error}`);
+      logger.error(`Failed to read ${file}: ${result.error}`);
     }
   }
 
   // Now LLM can analyze all files together
-  console.log('All files loaded for analysis');
+  logger.info(`All files loaded for analysis`);
   return contents;
 }
 
@@ -91,9 +92,9 @@ async function example3_CreateProjectStructure() {
   for (const dir of dirs) {
     const result = await nav.createDirectory(dir, { recursive: true });
     if (isError(result)) {
-      console.error(`Failed: ${result.error}`);
+      logger.error(`Failed: ${result.error}`);
     } else {
-      console.log(`Created: ${result.path}`);
+      logger.info(`Created: ${result.path}`);
     }
   }
 }
@@ -128,9 +129,9 @@ async function example4_GenerateCodeFiles() {
     });
 
     if (isError(result)) {
-      console.error(`✗ Failed: ${result.error}`);
+      logger.error(`✗ Failed: ${result.error}`);
     } else {
-      console.log(`✓ Created ${result.path}`);
+      logger.info(`✓ Created ${result.path}`);
     }
   }
 }
@@ -147,7 +148,7 @@ async function example5_IterativeFileUpdates() {
   // Read existing file
   const result = await nav.readFile('src/main.ts');
   if (!isFileRead(result)) {
-    console.error(`Cannot read: ${isError(result) ? result.error : 'unknown'}`);
+    logger.error(`Cannot read: ${isError(result) ? result.error : 'unknown'}`);
     return;
   }
   let content = result.content;
@@ -160,9 +161,9 @@ async function example5_IterativeFileUpdates() {
   // Write back with updated content
   const writeResult = await nav.writeFile('src/main.ts', content);
   if (isFileWrite(writeResult)) {
-    console.log(`Updated ${writeResult.path} (${writeResult.size} bytes)`);
+    logger.info(`Updated ${writeResult.path} (${writeResult.size} bytes)`);
   } else if (isError(writeResult)) {
-    console.error(`Write failed: ${writeResult.error}`);
+    logger.error(`Write failed: ${writeResult.error}`);
   }
 }
 
@@ -181,21 +182,21 @@ async function example6_ValidateBeforeOperation() {
   // Check metadata first
   const stat = await nav.getMetadata(filePath);
   if (!isMetadata(stat)) {
-    console.error(`File not found: ${isError(stat) ? stat.error : 'unknown'}`);
+    logger.error(`File not found: ${isError(stat) ? stat.error : 'unknown'}`);
     return;
   }
   if (stat.stat.size > 1024 * 1024) {
-    console.log(`File is ${stat.stat.size} bytes - may be too large`);
+    logger.warn(`File is ${stat.stat.size} bytes - may be too large`);
   }
   if (!stat.stat.isReadable) {
-    console.error('File is not readable');
+    logger.error(`File is not readable`);
     return;
   }
 
   // Now safe to read
   const content = await nav.readFile(filePath);
   if (isFileRead(content)) {
-    console.log('File content loaded:', content.content.slice(0, 100));
+    logger.info(`File content loaded: ${content.content.slice(0, 100)}`);
   }
 }
 
@@ -211,7 +212,8 @@ async function example7_HandlerIntegration() {
     op: 'list',
     path: 'src',
   });
-  console.log(list);
+  logger.info(`Directory listing result:`);
+  logger.debug(JSON.stringify(list, null, 2));
 
   // Write with structured params
   const write = await handler.execute({
@@ -220,7 +222,8 @@ async function example7_HandlerIntegration() {
     content: 'export const result = "success";',
     writeOptions: { createDirs: true },
   });
-  console.log(write);
+  logger.info(`Write result:`);
+  logger.debug(JSON.stringify(write, null, 2));
 
   // Read with error handling
   const read = await handler.execute({
@@ -228,9 +231,9 @@ async function example7_HandlerIntegration() {
     path: 'output/result.ts',
   });
   if (isError(read)) {
-    console.log('Read error:', read.error);
+    logger.error(`Read error: ${read.error}`);
   } else if (isFileRead(read)) {
-    console.log('Content:', read.content);
+    logger.info(`Content: ${read.content}`);
   }
 
   // Delete operation
@@ -239,7 +242,8 @@ async function example7_HandlerIntegration() {
     path: 'output/temp',
     deleteOptions: { recursive: true },
   });
-  console.log(del);
+  logger.info(`Delete result:`);
+  logger.debug(JSON.stringify(del, null, 2));
 }
 
 // ============================================================================
@@ -278,7 +282,8 @@ async function example8_BatchOperationsWithRecovery() {
     }
   }
 
-  console.log('Batch results:', results);
+  logger.info(`Batch results:`);
+  logger.debug(JSON.stringify(results, null, 2));
   return results;
 }
 
@@ -296,16 +301,16 @@ async function example9_ExploreDirectoryTree() {
 
     const listing = await nav.listDirectory(dirPath);
     if (!isDirectory(listing)) {
-      console.log(`${indent}ERROR: ${isError(listing) ? listing.error : 'unknown'}`);
+      logger.error(`${indent}ERROR: ${isError(listing) ? listing.error : 'unknown'}`);
       return;
     }
 
     for (const entry of listing.entries) {
       if (entry.type === 'directory') {
-        console.log(`${indent}📁 ${entry.name}/`);
+        logger.info(`${indent}📁 ${entry.name}/`);
         if (depth < 2) await exploreTree(entry.path, depth + 1);
       } else {
-        console.log(`${indent}📄 ${entry.name} (${entry.size ?? 0} bytes)`);
+        logger.info(`${indent}📄 ${entry.name} (${entry.size ?? 0} bytes)`);
       }
     }
   }
@@ -337,9 +342,10 @@ async function example10_ValidateWorkspace() {
     required.push({ file, exists, writable });
   }
 
-  console.log('Workspace validation:', required);
+  logger.info(`Workspace validation:`);
+  logger.debug(JSON.stringify(required, null, 2));
   const allReady = required.every((r) => r.exists && r.writable);
-  console.log(`Workspace ready: ${allReady}`);
+  logger.info(`Workspace ready: ${allReady}`);
   return allReady;
 }
 

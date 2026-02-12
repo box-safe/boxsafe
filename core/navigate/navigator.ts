@@ -27,7 +27,8 @@ import type {
   MetadataResult,
   OperationError,
   FileSystemEntry,
-} from './types';
+} from '@core/navigate/types';
+import { Logger } from '@core/util/logger';
 import {
   isWithinWorkspace,
   resolvePath,
@@ -36,7 +37,7 @@ import {
   checkFileSize,
   sanitizeFilename,
   formatPathDisplay,
-} from './utils';
+} from '@core/navigate/utils';
 
 /**
  * File system navigator for safe LLM-driven file operations.
@@ -46,12 +47,6 @@ export class Navigator {
   private workspace: string;
   private followSymlinks: boolean;
   private maxFileSize: number;
-  private logger: {
-    debug: (...args: any[]) => void;
-    info: (...args: any[]) => void;
-    warn: (...args: any[]) => void;
-    error: (...args: any[]) => void;
-  };
 
   /**
    * Creates a new Navigator instance.
@@ -60,10 +55,7 @@ export class Navigator {
    * @throws Error if workspace doesn't exist or is invalid
    */
   constructor(config: NavigatorConfig) {
-    if (!fsSync.existsSync(config.workspace)) {
-      throw new Error(`Workspace path does not exist: ${config.workspace}`);
-    }
-
+    // Validate workspace directory exists
     const stats = fsSync.statSync(config.workspace);
     if (!stats.isDirectory()) {
       throw new Error(`Workspace path is not a directory: ${config.workspace}`);
@@ -72,9 +64,10 @@ export class Navigator {
     this.workspace = path.resolve(config.workspace); // -- absolute path -- 
     this.followSymlinks = config.followSymlinks ?? false;
     this.maxFileSize = config.maxFileSize ?? 10 * 1024 * 1024; // 10MB default
-    this.logger = config.logger ?? console;
-
-    this.logger.debug(`[Navigator] Initialized with workspace: ${this.workspace}`);
+    
+    // Create logger directly
+    const logger = Logger.createModuleLogger('Navigator');
+    logger.debug(`Initialized with workspace: ${this.workspace}`);
   }
 
   /**
@@ -125,7 +118,7 @@ export class Navigator {
 
           result.push(fsEntry);
         } catch (err: any) {
-          this.logger.warn(`[Navigator] Failed to stat entry ${entry.name}: ${err?.message}`);
+          Logger.createModuleLogger('Navigator').warn(`Failed to stat entry ${entry.name}: ${err?.message}`);
         }
       }
 
@@ -424,7 +417,7 @@ export class Navigator {
    * @private
    */
   private error(operation: string, error: string): OperationError {
-    this.logger.debug(`[Navigator] ${operation} failed: ${error}`);
+    Logger.createModuleLogger('Navigator').debug(`${operation} failed: ${error}`);
     return {
       ok: false,
       operation,

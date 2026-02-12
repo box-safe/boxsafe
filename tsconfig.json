@@ -6,6 +6,7 @@
     "paths": {
       "@/*": ["./*"],
       "@core/*": ["./core/*"],
+      "@coreutil/*": ["./core/util/*"],
       "@ai/*": ["./ai/*"],
       "@memo/*": ["./memo/*"],
       "@util/*": ["./util/*"],

@@ -5,12 +5,14 @@
  */
 
 import { initSegments } from "@core/segments/map";
-import logger from "@util/logger";
+import { Logger } from "@util/logger";
 import type { LoopOptions } from "@core/loop/types";
 import { LService, LModel } from "@ai/label";
 
+const logger = Logger.createModuleLogger('Main');
+
 async function main() {
-  logger.info("main", "Starting BoxSafe (minimal main)...");
+  logger.info(`Starting BoxSafe (minimal main)...`);
 
   try {
     // Initialize and obtain the segment runner and configuration
@@ -35,15 +37,15 @@ async function main() {
       ...(loops ? { maxIterations: loops, limit: loops } : {}),
     };
 
-    logger.info("main", `Running loop segment`);
+    logger.info(`Running loop segment`);
 
     // Delegate execution to the segment runner (keep main minimal)
     const result = await runSegment("loop", opts);
 
-    logger.info("main", `Loop completed: ${JSON.stringify(result)}`);
+    logger.info(`Loop completed: ${JSON.stringify(result)}`);
     process.exit(result?.ok ? 0 : 1);
   } catch (err: any) {
-    logger.error("main", `Fatal error: ${err?.message ?? err}`);
+    logger.error(`Fatal error: ${err?.message ?? err}`);
     process.exit(1);
   }
 }

@@ -2,5 +2,6 @@ exitCode=0
 signal=none
 timedOut=false
 stdout:
+hello world
 
 stderr:

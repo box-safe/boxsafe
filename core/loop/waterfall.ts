@@ -1,5 +1,7 @@
 import { readFile } from "node:fs/promises";
-import logger from "@/util/logger";
+import { Logger } from '@core/util/logger';
+
+const logger = Logger.createModuleLogger('Waterfall');
 
 export interface ExecResult {
   exitCode: number;
@@ -94,7 +96,7 @@ const SCORING_CONFIG = {
 export async function waterfall(
   ctx: WaterfallContext
 ): Promise<WaterfallResult> {
-  logger.info('waterfall', 'Starting evaluation system');
+  logger.info(`Starting evaluation system`);
   
   const breakdown: ScoreBreakdown = {
     exitCode: { passed: false, points: 0, maxPoints: 0, severity: 'critical' },
@@ -110,7 +112,7 @@ export async function waterfall(
   breakdown.exitCode = checkExitCode(ctx);
   
   if (!breakdown.exitCode.passed && breakdown.exitCode.severity === 'critical') {
-    logger.error('waterfall', 'FAILED: Non-zero exit code (critical)');
+    logger.error(`FAILED: Non-zero exit code (critical)`);
     return {
       ok: false,
       layer: 'exit-code',
@@ -125,7 +127,7 @@ export async function waterfall(
   breakdown.stderr = checkStderr(ctx);
   
   if (!breakdown.stderr.passed && breakdown.stderr.severity === 'critical') {
-    logger.error('waterfall', 'FAILED: Critical error in stderr');
+    logger.error(`FAILED: Critical error in stderr`);
     return {
       ok: false,
       layer: 'stderr',
@@ -146,18 +148,18 @@ export async function waterfall(
   breakdown.totalScore = calculateTotalScore(breakdown);
   breakdown.percentage = breakdown.totalScore;
 
-  logger.info('waterfall', `Final Score: ${breakdown.totalScore.toFixed(1)}/100`);
+  logger.info(`Final Score: ${breakdown.totalScore.toFixed(1)}/100`);
   logScoreBreakdown(breakdown);
 
   if (breakdown.totalScore >= SCORING_CONFIG.PASSING_THRESHOLD) {
-    logger.info('waterfall', `PASSED (score: ${breakdown.totalScore.toFixed(1)} >= ${SCORING_CONFIG.PASSING_THRESHOLD})`);
+    logger.info(`PASSED (score: ${breakdown.totalScore.toFixed(1)} >= ${SCORING_CONFIG.PASSING_THRESHOLD})`);
     return {
       ok: true,
       score: breakdown.totalScore,
       breakdown,
     };
   } else {
-    logger.warn('waterfall', `FAILED (score: ${breakdown.totalScore.toFixed(1)} < ${SCORING_CONFIG.PASSING_THRESHOLD})`);
+    logger.warn(`FAILED (score: ${breakdown.totalScore.toFixed(1)} < ${SCORING_CONFIG.PASSING_THRESHOLD})`);
     return {
       ok: false,
       layer: 'score-threshold',
@@ -198,7 +200,7 @@ function checkStderr(ctx: WaterfallContext): CheckResult {
   // Check for critical patterns first
   for (const pattern of SCORING_CONFIG.STDERR.CRITICAL_PATTERNS) {
     if (pattern.test(stderr)) {
-      logger.error('waterfall', `Critical error detected: ${pattern}`);
+      logger.error(`Critical error detected: ${pattern}`);
       return {
         passed: false,
         points: 0,
@@ -220,7 +222,7 @@ function checkStderr(ctx: WaterfallContext): CheckResult {
   if (warningCount > 0) {
     const penalty = SCORING_CONFIG.STDERR.WARNING_PENALTY / 100;
     const points = maxPoints * (1 - penalty);
-    logger.warn('waterfall', `${warningCount} warning(s) in stderr - ${SCORING_CONFIG.STDERR.WARNING_PENALTY}% penalty`);
+    logger.warn(`${warningCount} warning(s) in stderr - ${SCORING_CONFIG.STDERR.WARNING_PENALTY}% penalty`);
     return {
       passed: true,
       points,
@@ -251,7 +253,7 @@ async function checkOutputContract(ctx: WaterfallContext): Promise<CheckResult> 
   try {
     const parsed = JSON.parse(stdout);
     if (parsed && (parsed.result === 'success' || parsed.status === 'success')) {
-      logger.info('waterfall', '✓ JSON contract detected in stdout');
+      logger.info(`✓ JSON contract detected in stdout`);
       return {
         passed: true,
         points: maxPoints,
@@ -274,7 +276,7 @@ async function checkOutputContract(ctx: WaterfallContext): Promise<CheckResult> 
 
     if (matched) {
       matchedContracts++;
-      logger.info('waterfall', `✓ Contract matched: ${contract}`);
+      logger.info(`✓ Contract matched: ${contract}`);
     }
   }
 
@@ -291,11 +293,11 @@ async function checkOutputContract(ctx: WaterfallContext): Promise<CheckResult> 
 
         if (matched) {
           matchedContracts++;
-          logger.info('waterfall', `✓ Contract matched in artifact: ${contract}`);
+          logger.info(`✓ Contract matched in artifact: ${contract}`);
         }
       }
     } catch (err: any) {
-      logger.warn('waterfall', 'Could not read artifact:', err?.message);
+      logger.warn(`Could not read artifact: ${err?.message}`);
     }
   }
 
@@ -315,7 +317,7 @@ async function checkOutputContract(ctx: WaterfallContext): Promise<CheckResult> 
     percentage >= SCORING_CONFIG.OUTPUT_CONTRACT.PARTIAL_THRESHOLD / 100
   ) {
     const points = maxPoints * percentage;
-    logger.warn('waterfall', `Only ${matchedContracts}/${contracts.length} contracts matched`);
+    logger.warn(`Only ${matchedContracts}/${contracts.length} contracts matched`);
     return {
       passed: true,
       points,
@@ -324,7 +326,7 @@ async function checkOutputContract(ctx: WaterfallContext): Promise<CheckResult> 
       message: `Partial match: ${matchedContracts}/${contracts.length} contracts`,
     };
   } else {
-    logger.warn('waterfall', `Insufficient contracts: ${matchedContracts}/${contracts.length}`);
+    logger.warn(`Insufficient contracts: ${matchedContracts}/${contracts.length}`);
     return {
       passed: false,
       points: 0,
@@ -352,7 +354,7 @@ async function checkArtifacts(ctx: WaterfallContext): Promise<CheckResult> {
     const content = await readFile(ctx.artifacts.outputFile, 'utf-8');
 
     if (!content || content.trim().length === 0) {
-      logger.warn('waterfall', 'Empty artifact');
+      logger.warn('Empty artifact');
       return {
         passed: false,
         points: 0,
@@ -362,7 +364,7 @@ async function checkArtifacts(ctx: WaterfallContext): Promise<CheckResult> {
       };
     }
 
-    logger.info('waterfall', `✓ Artifact OK (${content.length} bytes)`);
+    logger.info(`✓ Artifact OK (${content.length} bytes)`);
     return {
       passed: true,
       points: maxPoints,
@@ -371,7 +373,7 @@ async function checkArtifacts(ctx: WaterfallContext): Promise<CheckResult> {
       message: 'Artifact valid',
     };
   } catch (err: any) {
-    logger.warn('waterfall', 'Error reading artifact:', err.message);
+    logger.warn(`Error reading artifact: ${err.message}`);
     return {
       passed: false,
       points: 0,
@@ -392,11 +394,11 @@ function calculateTotalScore(breakdown: ScoreBreakdown): number {
 }
 
 function logScoreBreakdown(breakdown: ScoreBreakdown): void {
-  logger.info('waterfall', '  Score breakdown:');
-  logger.info('waterfall', `  Exit Code:       ${breakdown.exitCode.points.toFixed(1)}/${breakdown.exitCode.maxPoints} ${breakdown.exitCode.passed ? '✓' : '✗'}`);
-  logger.info('waterfall', `  Stderr:          ${breakdown.stderr.points.toFixed(1)}/${breakdown.stderr.maxPoints} ${breakdown.stderr.passed ? '✓' : '✗'}`);
-  logger.info('waterfall', `  Output Contract: ${breakdown.outputContract.points.toFixed(1)}/${breakdown.outputContract.maxPoints} ${breakdown.outputContract.passed ? '✓' : '✗'}`);
-  logger.info('waterfall', `  Artifacts:       ${breakdown.artifacts.points.toFixed(1)}/${breakdown.artifacts.maxPoints} ${breakdown.artifacts.passed ? '✓' : '✗'}`);
-  logger.info('waterfall', `  ────────────────────────────`);
-  logger.info('waterfall', `  TOTAL:           ${breakdown.totalScore.toFixed(1)}/100`);
+  logger.info(`  Score breakdown:`);
+  logger.info(`  Exit Code:       ${breakdown.exitCode.points.toFixed(1)}/${breakdown.exitCode.maxPoints} ${breakdown.exitCode.passed ? '✓' : '✗'}`);
+  logger.info(`  Stderr:          ${breakdown.stderr.points.toFixed(1)}/${breakdown.stderr.maxPoints} ${breakdown.stderr.passed ? '✓' : '✗'}`);
+  logger.info(`  Output Contract: ${breakdown.outputContract.points.toFixed(1)}/${breakdown.outputContract.maxPoints} ${breakdown.outputContract.passed ? '✓' : '✗'}`);
+  logger.info(`  Artifacts:       ${breakdown.artifacts.points.toFixed(1)}/${breakdown.artifacts.maxPoints} ${breakdown.artifacts.passed ? '✓' : '✗'}`);
+  logger.info(`  ────────────────────────────`);
+  logger.info(`  TOTAL:           ${breakdown.totalScore.toFixed(1)}/100`);
 }

@@ -7,11 +7,11 @@
  * @module core/ports/index
  */
 
-import type { BoxSafeConfig, CommandRun } from '@/types';
+import type { BoxSafeConfig, CommandRun } from '../../types';
 import type { LService, LModel } from '@ai/label';
 
 // Re-export BoxSafeConfig for convenience
-export type { BoxSafeConfig, CommandRun } from '@/types';
+export type { BoxSafeConfig, CommandRun } from '../../types';
 
 // Re-export navigate types for convenience
 export type { 

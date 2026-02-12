@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { mkdir, appendFile, readdir, stat, unlink } from 'node:fs/promises';
 import { STATES_LOGS_DIR } from '@core/paths/paths';
+import { Logger } from '@core/util/logger';
 
 export type TraceCtx = {
   runId: string;
@@ -86,17 +87,14 @@ export function createTraceLogger(opts?: Partial<TraceOptions>) {
     return `[${parts.join('][')}]`;
   }
 
-  function wrapLogger<T extends { info: (...a: any[]) => any; warn: (...a: any[]) => any; error: (...a: any[]) => any }>(
-    base: T,
-    ctx?: TraceCtx
-  ): T {
+  function wrapLogger(ctx?: TraceCtx) {
+    const logger = Logger.createModuleLogger('Trace');
     const p = prefix(ctx);
     return {
-      ...base,
-      info: (...a: any[]) => base.info(p, ...a),
-      warn: (...a: any[]) => base.warn(p, ...a),
-      error: (...a: any[]) => base.error(p, ...a),
-    } as T;
+      info: (...a: any[]) => logger.info(`${p} ${a.join(' ')}`),
+      warn: (...a: any[]) => logger.warn(`${p} ${a.join(' ')}`),
+      error: (...a: any[]) => logger.error(`${p} ${a.join(' ')}`),
+    };
   }
 
   return {

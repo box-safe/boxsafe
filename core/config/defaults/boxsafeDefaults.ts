@@ -1,6 +1,6 @@
-import type { BoxSafeConfig } from '@/types';
+// Tipos serão importados do loadConfig para evitar dependências externas
 
-export const DEFAULT_BOXSAFE_CONFIG: BoxSafeConfig = {
+export const DEFAULT_BOXSAFE_CONFIG = {
   project: {
     workspace: './',
     testDir: './',
@@ -26,7 +26,7 @@ export const DEFAULT_BOXSAFE_CONFIG: BoxSafeConfig = {
   },
   limits: {
     tokens: 100000,
-    loops: 2,
+    loops: 10,
     timeout: {
       enabled: false,
       duration: '1h',

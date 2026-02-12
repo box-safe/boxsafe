@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
-import type { CommandRun } from "@/types";
+import type { CommandRun } from "../../../types";
 import type { ExecResult } from "@core/loop/waterfall";
 import { STATES_LOGS_DIR, STATES_LOG_FILE } from "@core/paths/paths";
 

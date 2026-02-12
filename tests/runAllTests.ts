@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { Logger } from '@util/logger';
+
+const logger = Logger.createModuleLogger('TestRunner');
 
 type TestFn = () => void | Promise<void>;
 
@@ -29,15 +32,15 @@ async function run() {
     try {
       await t.fn();
       passed++;
-      console.log(`✓ ${t.name}`);
+      logger.info(`✓ ${t.name}`);
     } catch (err: any) {
       failed++;
-      console.error(`✗ ${t.name}`);
-      console.error(String(err?.stack ?? err));
+      logger.error(`✗ ${t.name}`);
+      logger.error(String(err?.stack ?? err));
     }
   }
 
-  console.log(`\nResults: ${passed} passed, ${failed} failed`);
+  logger.info(`\nResults: ${passed} passed, ${failed} failed`);
   assert.equal(failed, 0);
 }
 

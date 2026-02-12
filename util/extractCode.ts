@@ -1,6 +1,8 @@
 import { remark } from 'remark';
 import { visit } from 'unist-util-visit';
-import { ANSI } from '@util/ANSI';
+import { Logger } from '@util/logger';
+
+const logger = Logger.createModuleLogger('ExtractCode');
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -123,15 +125,15 @@ export const extractCode = async (
   const { throwOnNotFound = false, customNotFoundMessage } = options;
 
   if (!md || typeof md !== 'string') {
-    throw new Error(
-      `${ANSI.Red}[⚠️ERROR(extractcode)] Invalid markdown input: expected non-empty string${ANSI.Reset}`
-    );
+    const errorMsg = 'Invalid markdown input: expected non-empty string';
+    logger.error(errorMsg);
+    throw new Error(errorMsg);
   }
 
   if (!lang || typeof lang !== 'string') {
-    throw new Error(
-      `${ANSI.Red}[⚠️ERROR(extractcode)] Invalid language: expected non-empty string${ANSI.Reset}`
-    );
+    const errorMsg = 'Invalid language: expected non-empty string';
+    logger.error(errorMsg);
+    throw new Error(errorMsg);
   }
 
   const codeBlocks: string[] = [];
@@ -163,9 +165,9 @@ export const extractCode = async (
 
     if (codeBlocks.length === 0) {
       if (throwOnNotFound) {
-        throw new Error(
-          `${ANSI.Red}[⚠️ERROR(extractcode)] No ${lang} code block found in markdown${ANSI.Reset}`
-        );
+        const errorMsg = `No ${lang} code block found in markdown`;
+        logger.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
       // Fallback: try to extract unlabeled fenced blocks or raw code from the
@@ -192,9 +194,9 @@ export const extractCode = async (
 
       if (codeBlocks.length === 0) {
         if (throwOnNotFound) {
-          throw new Error(
-            `${ANSI.Red}[⚠️ERROR(extractcode)] No ${lang} code block found in markdown${ANSI.Reset}`
-          );
+          const errorMsg = `No ${lang} code block found in markdown`;
+          logger.error(errorMsg);
+          throw new Error(errorMsg);
         }
 
         return [customNotFoundMessage ?? generateNotFoundPrompt(lang)];
@@ -203,14 +205,13 @@ export const extractCode = async (
 
     return codeBlocks;
   } catch (error) {
-    console.error(
-      `${ANSI.Red}[⚠️ERROR(extractcode)] Failed to parse markdown: ${error}${ANSI.Reset}`
-    );
+    const errorMsg = `Failed to parse markdown: ${error}`;
+    logger.error(errorMsg);
 
     throw new Error(
-      `${ANSI.Red}[⚠️ERROR(extractcode)] Failed to extract code: ${
+      `Failed to extract code: ${
         error instanceof Error ? error.message : 'unknown error'
-      }${ANSI.Reset}`
+      }`
     );
   }
 };

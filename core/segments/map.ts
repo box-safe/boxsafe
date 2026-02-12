@@ -4,7 +4,7 @@
  * Encapsulates all route logic in a single function.
  * No arguments required—all config comes from boxsafe.config.json and env.
  */
-import { ANSI } from "@/util/ANSI";
+import { ANSI } from "../../util/ANSI";
 import { loadBoxSafeConfig } from '@core/config/loadConfig';
 import { createLoopSegment } from './loop';
 import { createNavigateSegment } from './navigate';

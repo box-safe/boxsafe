@@ -28,5 +28,5 @@ export type {
   DeleteResult,
   MetadataResult,
   FileSystemEntry,
-} from './types';
-export type { NavigatorOperationParams } from './handler';
+} from '@core/navigate/types';
+export type { NavigatorOperationParams } from '@core/navigate/handler';

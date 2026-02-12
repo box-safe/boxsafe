@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { runCommand, stageAll, commitAll, getRemoteUrl, pushOrigin, pushWithToken, getCommitSummary } from './gitClient';
-import { getCredLinux } from '../../auth/dasktop/cred/credLinux';
+import { getCredLinux } from '@core/auth/dasktop/cred/credLinux';
 
 async function findRepoRoot(start = process.cwd()) {
   let cur = start;

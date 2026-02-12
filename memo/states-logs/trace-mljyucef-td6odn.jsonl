@@ -1,0 +1,11 @@
+{"ts":"2026-02-12T21:23:39.211Z","runId":"mljyucef-td6odn","event":"loop.start","data":{"service":"google","model":"gemini-2.5-flash","lang":"ts","maxIterations":1}}
+{"ts":"2026-02-12T21:23:39.213Z","runId":"mljyucef-td6odn","event":"versionControl.before.start"}
+{"ts":"2026-02-12T21:23:39.285Z","runId":"mljyucef-td6odn","event":"versionControl.before.ok","data":{"result":{"committed":true,"pushed":false}}}
+{"ts":"2026-02-12T21:23:39.288Z","runId":"mljyucef-td6odn","iter":1,"event":"iteration.start"}
+{"ts":"2026-02-12T21:23:39.288Z","runId":"mljyucef-td6odn","iter":1,"event":"llm.run.start"}
+{"ts":"2026-02-12T21:23:39.356Z","runId":"mljyucef-td6odn","iter":1,"event":"llm.run.error","data":{"error":"Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.","attempt":1}}
+{"ts":"2026-02-12T21:23:39.557Z","runId":"mljyucef-td6odn","iter":1,"event":"llm.run.start"}
+{"ts":"2026-02-12T21:23:39.558Z","runId":"mljyucef-td6odn","iter":1,"event":"llm.run.error","data":{"error":"Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.","attempt":2}}
+{"ts":"2026-02-12T21:23:39.959Z","runId":"mljyucef-td6odn","iter":1,"event":"llm.run.start"}
+{"ts":"2026-02-12T21:23:39.961Z","runId":"mljyucef-td6odn","iter":1,"event":"llm.run.error","data":{"error":"Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.","attempt":3}}
+{"ts":"2026-02-12T21:23:39.961Z","runId":"mljyucef-td6odn","iter":1,"event":"iteration.failed","data":{"layer":"llm"}}

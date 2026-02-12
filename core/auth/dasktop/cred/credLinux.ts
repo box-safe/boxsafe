@@ -7,6 +7,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ANSI } from '@util/ANSI';
+import { Logger } from '@core/util/logger';
 
 const execAsync = promisify(exec);
 
@@ -23,6 +24,7 @@ interface LookupArgs {
 }
 
 const DEFAULT_SERVICE = 'box-safe';
+const logger = Logger.createModuleLogger('CredentialManager');
 
 /**
  * Saves credential to the system keyring
@@ -39,7 +41,7 @@ export async function setCredLinux({
     );
     return true;
   } catch (err) {
-    console.error(`${ANSI.Red}[Error] Failed to save credential: ${err}${ANSI.Reset}`);
+    logger.error(`Failed to save credential: ${err}`);
     return false;
   }
 }
@@ -57,7 +59,7 @@ export async function getCredLinux({
     );
     return stdout.trim();
   } catch (err) {
-    console.error(`${ANSI.Red}[Error] Credential not found: ${account}${ANSI.Reset}`);
+    logger.error(`Credential not found: ${account}`);
     return null;
   }
 }
@@ -73,7 +75,7 @@ export async function deleteCredLinux({
     await execAsync(`secret-tool clear service ${service} account ${account}`);
     return true;
   } catch (err) {
-    console.error(`${ANSI.Red}[Error] Failed to delete credential: ${account}${ANSI.Reset}`);
+    logger.error(`Failed to delete credential: ${account}`);
     return false;
   }
 }

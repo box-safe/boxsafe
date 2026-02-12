@@ -2,9 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import { runVersionControl } from './index';
+import { runVersionControl } from '@core/loop/git';
+import { Logger } from '@core/util/logger';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
+const logger = Logger.createModuleLogger('VersionControlRunner');
 
 async function main() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -24,7 +27,7 @@ async function main() {
   const generateNotes = bsConfig.project?.versionControl?.generateNotes ?? (process.env.BOXSAFE_GENERATE_NOTES === '1');
 
   const res = await runVersionControl({ repoPath: repoRoot, autoPush, generateNotes, commitMessage: 'chore: add git versioning module (boxsafe agent)' });
-  console.log('Version control result:', JSON.stringify(res));
+  logger.info(`Version control result: ${JSON.stringify(res)}`);
 }
 
-main().catch((e) => { console.error('Runner error', e); process.exit(1); });
+main().catch((e) => { logger.error(`Runner error: ${e}`); process.exit(1); });

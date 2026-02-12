@@ -17,6 +17,7 @@ import type {
 } from '@core/navigate';
 import path from 'node:path';
 import fs from 'node:fs';
+import { Logger } from '@core/util/logger';
 
 // Type guards for proper narrowing
 const isDirectory = (result: any): result is DirectoryListing => result.ok && 'entries' in result;
@@ -27,6 +28,8 @@ const isDelete = (result: any): result is DeleteResult => result.ok && 'type' in
 const isMetadata = (result: any): result is MetadataResult => result.ok && 'stat' in result;
 const isError = (result: any): result is { ok: false; error: string } => !result.ok;
 
+const testLogger = Logger.createModuleLogger('NavigatorTests');
+
 /**
  * Test suite for Navigator class
  */
@@ -35,15 +38,15 @@ export const navigatorTests = {
    * Test: Creating navigator with invalid workspace
    */
   async testInvalidWorkspace() {
-    console.log('[TEST] Invalid workspace path');
+    testLogger.info('[TEST] Invalid workspace path');
     try {
       createNavigator({
         workspace: '/nonexistent/path/to/workspace',
       });
-      console.log('❌ FAIL: Should throw for nonexistent workspace');
+      testLogger.info('FAIL: Should throw for nonexistent workspace');
       return false;
     } catch (err) {
-      console.log('✓ PASS: Correctly rejects invalid workspace');
+      testLogger.info('✓ PASS: Correctly rejects invalid workspace');
       return true;
     }
   },
@@ -52,7 +55,7 @@ export const navigatorTests = {
    * Test: List directory
    */
   async testListDirectory() {
-    console.log('[TEST] List directory');
+    testLogger.info('[TEST] List directory');
     const tempDir = fs.mkdtempSync(path.join('/tmp', 'nav-test-'));
     try {
       // Create test files
@@ -63,12 +66,12 @@ export const navigatorTests = {
       const result = await nav.listDirectory('.');
 
       if (!isDirectory(result)) {
-        console.log(`❌ FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
+        testLogger.info(`FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
         return false;
       }
 
       if (result.total !== 2) {
-        console.log(`❌ FAIL: Expected 2 entries, got ${result.total}`);
+        testLogger.info(`FAIL: Expected 2 entries, got ${result.total}`);
         return false;
       }
 
@@ -76,11 +79,11 @@ export const navigatorTests = {
       const hasDir = result.entries.some((e: any) => e.name === 'subdir' && e.type === 'directory');
 
       if (!hasFile || !hasDir) {
-        console.log('❌ FAIL: Did not find expected entries');
+        testLogger.info('FAIL: Did not find expected entries');
         return false;
       }
 
-      console.log('✓ PASS: Directory listing works correctly');
+      testLogger.info('✓ PASS: Directory listing works correctly');
       return true;
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -91,7 +94,7 @@ export const navigatorTests = {
    * Test: Read file
    */
   async testReadFile() {
-    console.log('[TEST] Read file');
+    testLogger.info('[TEST] Read file');
     const tempDir = fs.mkdtempSync(path.join('/tmp', 'nav-test-'));
     try {
       const filePath = path.join(tempDir, 'test.txt');
@@ -102,21 +105,21 @@ export const navigatorTests = {
       const result = await nav.readFile('test.txt');
 
       if (!isFileRead(result)) {
-        console.log(`❌ FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
+        testLogger.info(`FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
         return false;
       }
 
       if (result.content !== content) {
-        console.log(`❌ FAIL: Content mismatch`);
+        testLogger.info(`FAIL: Content mismatch`);
         return false;
       }
 
       if (result.size !== content.length) {
-        console.log(`❌ FAIL: Size mismatch`);
+        testLogger.info(`FAIL: Size mismatch`);
         return false;
       }
 
-      console.log('✓ PASS: File reading works correctly');
+      testLogger.info('✓ PASS: File reading works correctly');
       return true;
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -127,7 +130,7 @@ export const navigatorTests = {
    * Test: Write file (new)
    */
   async testWriteFileNew() {
-    console.log('[TEST] Write file (new)');
+    testLogger.info('[TEST] Write file (new)');
     const tempDir = fs.mkdtempSync(path.join('/tmp', 'nav-test-'));
     try {
       const nav = createNavigator({ workspace: tempDir });
@@ -136,12 +139,12 @@ export const navigatorTests = {
       const result = await nav.writeFile('newfile.txt', content, { createDirs: true });
 
       if (!isFileWrite(result)) {
-        console.log(`❌ FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
+        testLogger.info(`FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
         return false;
       }
 
       if (!result.created) {
-        console.log('❌ FAIL: Should mark file as created');
+        testLogger.info('FAIL: Should mark file as created');
         return false;
       }
 
@@ -149,17 +152,17 @@ export const navigatorTests = {
       const filePath = path.join(tempDir, 'newfile.txt');
       const exists = fs.existsSync(filePath);
       if (!exists) {
-        console.log('❌ FAIL: File was not created');
+        testLogger.info('FAIL: File was not created');
         return false;
       }
 
       const fileContent = fs.readFileSync(filePath, 'utf-8');
       if (fileContent !== content) {
-        console.log('❌ FAIL: File content mismatch');
+        testLogger.info('FAIL: File content mismatch');
         return false;
       }
 
-      console.log('✓ PASS: File writing (new) works correctly');
+      testLogger.info('✓ PASS: File writing (new) works correctly');
       return true;
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -170,7 +173,7 @@ export const navigatorTests = {
    * Test: Create directory
    */
   async testCreateDirectory() {
-    console.log('[TEST] Create directory');
+    testLogger.info('[TEST] Create directory');
     const tempDir = fs.mkdtempSync(path.join('/tmp', 'nav-test-'));
     try {
       const nav = createNavigator({ workspace: tempDir });
@@ -178,18 +181,18 @@ export const navigatorTests = {
       const result = await nav.createDirectory('level1/level2/level3', { recursive: true });
 
       if (!isDirectoryCreate(result)) {
-        console.log(`❌ FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
+        testLogger.info(`FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
         return false;
       }
 
       // Verify directory exists
       const dirPath = path.join(tempDir, 'level1/level2/level3');
       if (!fs.existsSync(dirPath)) {
-        console.log('❌ FAIL: Directory was not created');
+        testLogger.info('FAIL: Directory was not created');
         return false;
       }
 
-      console.log('✓ PASS: Directory creation works correctly');
+      testLogger.info('✓ PASS: Directory creation works correctly');
       return true;
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -200,7 +203,7 @@ export const navigatorTests = {
    * Test: Delete file
    */
   async testDeleteFile() {
-    console.log('[TEST] Delete file');
+    testLogger.info('[TEST] Delete file');
     const tempDir = fs.mkdtempSync(path.join('/tmp', 'nav-test-'));
     try {
       const filePath = path.join(tempDir, 'todelete.txt');
@@ -210,22 +213,22 @@ export const navigatorTests = {
       const result = await nav.delete('todelete.txt');
 
       if (!isDelete(result)) {
-        console.log(`❌ FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
+        testLogger.info(`FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
         return false;
       }
 
       if (result.type !== 'file') {
-        console.log('❌ FAIL: Type should be file');
+        testLogger.info('FAIL: Type should be file');
         return false;
       }
 
       // Verify file is gone
       if (fs.existsSync(filePath)) {
-        console.log('❌ FAIL: File still exists');
+        testLogger.info('FAIL: File still exists');
         return false;
       }
 
-      console.log('✓ PASS: File deletion works correctly');
+      testLogger.info('✓ PASS: File deletion works correctly');
       return true;
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -236,7 +239,7 @@ export const navigatorTests = {
    * Test: Security - prevent directory traversal
    */
   async testSecurityBoundary() {
-    console.log('[TEST] Security boundary (prevent traversal)');
+    testLogger.info('[TEST] Security boundary (prevent traversal)');
     const tempDir = fs.mkdtempSync(path.join('/tmp', 'nav-test-'));
     try {
       const nav = createNavigator({ workspace: tempDir });
@@ -245,15 +248,15 @@ export const navigatorTests = {
       const result = await nav.readFile('../../../etc/passwd');
 
       if (!isError(result)) {
-        console.log('❌ FAIL: Should not allow directory traversal');
+        testLogger.info('FAIL: Should not allow directory traversal');
         return false;
       }
 
       if (result.error.includes('outside workspace')) {
-        console.log('✓ PASS: Correctly blocks directory traversal');
+        testLogger.info('✓ PASS: Correctly blocks directory traversal');
         return true;
       } else {
-        console.log('❌ FAIL: Wrong error message:', result.error);
+        testLogger.info(`FAIL: Wrong error message: ${result.error}`);
         return false;
       }
     } finally {
@@ -265,7 +268,7 @@ export const navigatorTests = {
    * Test: Get metadata
    */
   async testGetMetadata() {
-    console.log('[TEST] Get metadata');
+    testLogger.info('[TEST] Get metadata');
     const tempDir = fs.mkdtempSync(path.join('/tmp', 'nav-test-'));
     try {
       const filePath = path.join(tempDir, 'test.txt');
@@ -276,26 +279,26 @@ export const navigatorTests = {
       const result = await nav.getMetadata('test.txt');
 
       if (!isMetadata(result)) {
-        console.log(`❌ FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
+        testLogger.info(`❌ FAIL: ${isError(result) ? result.error : 'unexpected result'}`);
         return false;
       }
 
       if (result.stat.type !== 'file') {
-        console.log('❌ FAIL: Type should be file');
+        testLogger.info('❌ FAIL: Type should be file');
         return false;
       }
 
       if (result.stat.size !== content.length) {
-        console.log('❌ FAIL: Size mismatch');
+        testLogger.info('❌ FAIL: Size mismatch');
         return false;
       }
 
       if (!result.stat.isReadable) {
-        console.log('❌ FAIL: Should be readable');
+        testLogger.info('❌ FAIL: Should be readable');
         return false;
       }
 
-      console.log('✓ PASS: Metadata retrieval works correctly');
+      testLogger.info('✓ PASS: Metadata retrieval works correctly');
       return true;
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -306,7 +309,7 @@ export const navigatorTests = {
    * Test: Handler integration
    */
   async testHandlerIntegration() {
-    console.log('[TEST] Handler integration');
+    testLogger.info('[TEST] Handler integration');
     const tempDir = fs.mkdtempSync(path.join('/tmp', 'nav-test-'));
     try {
       const handler = createNavigatorHandler(tempDir);
@@ -318,7 +321,7 @@ export const navigatorTests = {
       });
 
       if (!isDirectory(listResult)) {
-        console.log(`❌ FAIL: ${isError(listResult) ? listResult.error : 'unexpected result'}`);
+        testLogger.info(`❌ FAIL: ${isError(listResult) ? listResult.error : 'unexpected result'}`);
         return false;
       }
 
@@ -330,11 +333,11 @@ export const navigatorTests = {
       });
 
       if (!isFileWrite(writeResult)) {
-        console.log(`❌ FAIL: ${isError(writeResult) ? writeResult.error : 'unexpected result'}`);
+        testLogger.info(`❌ FAIL: ${isError(writeResult) ? writeResult.error : 'unexpected result'}`);
         return false;
       }
 
-      console.log('✓ PASS: Handler integration works correctly');
+      testLogger.info('✓ PASS: Handler integration works correctly');
       return true;
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -346,7 +349,7 @@ export const navigatorTests = {
  * Run all tests
  */
 export async function runAllTests() {
-  console.log('🧪 Running Navigator Tests\n');
+  testLogger.info('🧪 Running Navigator Tests\n');
 
   const tests = Object.entries(navigatorTests);
   let passed = 0;
@@ -358,12 +361,12 @@ export async function runAllTests() {
       if (result) passed++;
       else failed++;
     } catch (err: any) {
-      console.log(`❌ EXCEPTION: ${err?.message ?? err}`);
+      testLogger.info(`❌ EXCEPTION: ${err?.message ?? err}`);
       failed++;
     }
-    console.log('');
+    testLogger.info('');
   }
 
-  console.log(`\n📊 Results: ${passed} passed, ${failed} failed out of ${tests.length} tests`);
+  testLogger.info(`\n📊 Results: ${passed} passed, ${failed} failed out of ${tests.length} tests`);
   return failed === 0;
 }

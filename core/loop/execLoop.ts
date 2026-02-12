@@ -26,23 +26,23 @@ import { pathToCode } from "@core/paths/paths";
 import { createLLM } from "@ai/provider";
 import { runLLM } from "@ai/caller";
 import { LService, LModel } from "@ai/label";
-import { extractCode } from "@/util/extractCode";
-import type { CommandRun } from "@/types";
-import { execode } from "@/core/loop/cmd/execode";
+import { extractCode } from "../../util/extractCode";
+import type { CommandRun } from "../../types";
+import { execode } from "./cmd/execode";
 import { ANSI } from "@util/ANSI";
 import { createNavigator } from "@core/navigate";
 import type { Navigator } from "@core/navigate";
-import TasksManager from './tasks';
-import { loadBoxConfig, getVersionControlFlags } from './boxConfig';
-import { createVersionControlAttemptRunner } from './versionControlAdapter';
-import { dispatchToolCalls } from './toolDispatcher';
-import { initTasksManager } from './initTasksManager';
-import { initNavigator } from './initNavigator';
-import { writeArtifactAtomically } from './writeArtifactAtomically';
-import { buildExecCommand } from './buildExecCommand';
-import { runValidation } from './runValidation';
-import type { LoopOptions, LoopResult } from './types';
-import { createTraceLogger } from './traceLogger';
+import TasksManager from '@core/loop/tasks';
+import { loadBoxConfig, getVersionControlFlags } from '@core/loop/boxConfig';
+import { createVersionControlAttemptRunner } from '@core/loop/versionControlAdapter';
+import { dispatchToolCalls } from '@core/loop/toolDispatcher';
+import { initTasksManager } from '@core/loop/initTasksManager';
+import { initNavigator } from '@core/loop/initNavigator';
+import { writeArtifactAtomically } from '@core/loop/writeArtifactAtomically';
+import { buildExecCommand } from '@core/loop/buildExecCommand';
+import { runValidation } from '@core/loop/runValidation';
+import type { LoopOptions, LoopResult } from '@core/loop/types';
+import { createTraceLogger } from '@core/loop/traceLogger';
 
 /**
  * Create a navigator instance with the given workspace.
@@ -77,13 +77,11 @@ export const loop = async (
     pathGeneratedMarkdown = pathToCode,
     navigator: injectedNavigator,
     workspace,
-    logger,
   } : LoopOptions
 ): Promise<LoopResult> => {
   const llm = createLLM(service, model);
   const trace = createTraceLogger({});
-  const baseLog = logger ?? console;
-  const log = trace.wrapLogger(baseLog);
+  const log = trace.wrapLogger();
   await trace.emit('loop.start', { runId: trace.runId }, {
     service: String(service),
     model: String(model),
@@ -97,7 +95,7 @@ export const loop = async (
 
   const boxConfig = loadBoxConfig();
   const { vcBefore, vcAfter, vcGenerateNotes, vcAutoPushConfig } = getVersionControlFlags(boxConfig);
-  const attemptVersionControl = createVersionControlAttemptRunner(log, ANSI);
+  const attemptVersionControl = createVersionControlAttemptRunner();
 
   const configuredTimeoutMs = typeof boxConfig.commands?.timeoutMs === 'number' ? boxConfig.commands.timeoutMs : undefined;
 
@@ -114,7 +112,7 @@ export const loop = async (
     }
   }
 
-  const tasksManager: TasksManager | null = await initTasksManager(boxConfig, log, ANSI);
+  const tasksManager: TasksManager | null = await initTasksManager(boxConfig);
 
   // Determine effective workspace (from arg, config or cwd) and initialize navigator
   const { effectiveWorkspace, navigator } = initNavigator({
@@ -135,14 +133,14 @@ export const loop = async (
 
   for (limit = 1; limit <= effectiveLimit; limit++) {
     const iterCtx = { runId: trace.runId, iter: limit };
-    const iterLog = trace.wrapLogger(baseLog, iterCtx);
+    const iterLog = trace.wrapLogger(iterCtx);
     if (signal?.aborted) {
-      iterLog.error(`${ANSI.Red}[Agent]${ANSI.Reset} aborted`);
+      iterLog.error(`aborted`);
       await trace.emit('loop.aborted', iterCtx);
       return { ok: false, iterations: limit, navigator };
     }
 
-    iterLog.info(`${ANSI.Cyan}[Agent]${ANSI.Reset} iteration ${limit}`);
+    iterLog.info(`iteration ${limit}`);
     await trace.emit('iteration.start', iterCtx);
 
     // Run the LLM with the current feedback (with a small retry/backoff for transient LLM errors)
@@ -158,7 +156,7 @@ export const loop = async (
         break;
       } catch (err: any) {
         llmAttempts++;
-        iterLog.error(`${ANSI.Red}[LLM Runner]${ANSI.Reset}`, err?.message ?? err);
+        iterLog.error(`${err?.message ?? err}`);
         await trace.emit('llm.run.error', iterCtx, { error: err?.message ?? String(err), attempt: llmAttempts });
         if (llmAttempts >= maxLlmAttempts) {
           await trace.emit('iteration.failed', iterCtx, { layer: 'llm' });
@@ -176,7 +174,7 @@ export const loop = async (
       markdown = await readMarkdown(pathGeneratedMarkdown);
       await trace.emit('markdown.read.ok', iterCtx, { path: pathGeneratedMarkdown, bytes: markdown.length });
     } catch (err: any) {
-      iterLog.error(`${ANSI.Red}[ReadMarkdown]${ANSI.Reset}`, err?.message ?? err);
+      iterLog.error(`${ANSI.Red}[ReadMarkdown]${ANSI.Reset} ${err?.message ?? err}`);
       await trace.emit('markdown.read.error', iterCtx, { error: err?.message ?? String(err), path: pathGeneratedMarkdown });
       // give feedback to the model and retry
       feedback = "Could not read the generated markdown. Please emit markdown artifact.";
@@ -192,7 +190,7 @@ export const loop = async (
       });
       await trace.emit('extractCode.ok', iterCtx, { blocks: codeBlocks.length, lang: String(lang) });
     } catch (err: any) {
-      iterLog.warn(`${ANSI.Yellow}[ExtractCode]${ANSI.Reset}`, err?.message ?? err);
+      iterLog.warn(`${ANSI.Yellow}[ExtractCode]${ANSI.Reset} ${err?.message ?? err}`);
       await trace.emit('extractCode.error', iterCtx, { error: err?.message ?? String(err), lang: String(lang) });
       feedback = "No code blocks were found. Generate valid code for the requested language.";
       continue;
@@ -203,11 +201,10 @@ export const loop = async (
       markdown,
       navigator,
       boxConfig,
-      log: iterLog,
       ANSI,
       attemptVersionControl,
       vcAutoPushConfig,
-      traceEmit: trace.emit,
+      traceEmit: trace.emit.bind(trace),
       traceCtx: iterCtx,
     });
 
@@ -227,7 +224,7 @@ export const loop = async (
       });
       await trace.emit('artifact.write.ok', iterCtx, { path: pathOutput, bytes: codeBlocks.join("\n\n").length });
     } catch (err: any) {
-      iterLog.error(`${ANSI.Red}[WriteFile]${ANSI.Reset}`, err?.message ?? err);
+      iterLog.error(`${ANSI.Red}[WriteFile]${ANSI.Reset} ${err?.message ?? err}`);
       await trace.emit('artifact.write.error', iterCtx, { error: err?.message ?? String(err), path: pathOutput });
       feedback = "Failed to write output file. Ensure filesystem permissions are correct.";
       continue;
@@ -237,14 +234,14 @@ export const loop = async (
     let execResult: any;
     try {
       if (signal?.aborted) throw new Error("Aborted");
-      const execCmd = await buildExecCommand({ cmd, lang, pathOutput, log, ANSI });
+      const execCmd = await buildExecCommand({ cmd, lang, pathOutput });
       await trace.emit('exec.start', iterCtx, { cmd: Array.isArray(execCmd) ? execCmd[0] : execCmd });
       execResult = await execode(execCmd, {
         ...(configuredTimeoutMs !== undefined ? { timeoutMs: configuredTimeoutMs } : {}),
       });
       await trace.emit('exec.ok', iterCtx, { exitCode: execResult.exitCode });
     } catch (err: any) {
-      iterLog.error(`${ANSI.Red}[Execode]${ANSI.Reset}`, err?.message ?? err);
+      iterLog.error(`${ANSI.Red}[Execode]${ANSI.Reset} ${err?.message ?? err}`);
       await trace.emit('exec.error', iterCtx, { error: err?.message ?? String(err) });
       feedback = `Execution failed: ${err?.message ?? "unknown"}`;
       continue;
@@ -252,14 +249,14 @@ export const loop = async (
 
     // Debug: log exec output and the written artifact to diagnose failures
     try {
-      log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} exit=${execResult.exitCode}`);
-      log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} stdout=${String(execResult.stdout).slice(0,1000)}`);
-      log.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} stderr=${String(execResult.stderr).slice(0,1000)}`);
+      iterLog.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} exit=${execResult.exitCode}`);
+      iterLog.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} stdout=${String(execResult.stdout).slice(0,1000)}`);
+      iterLog.info(`${ANSI.Cyan}[Execode]${ANSI.Reset} stderr=${String(execResult.stderr).slice(0,1000)}`);
       try {
         const outFile = await readFile(pathOutput, 'utf-8');
-        log.info(`${ANSI.Cyan}[OutputFile]${ANSI.Reset} ${outFile.slice(0,1000)}`);
+        iterLog.info(`${ANSI.Cyan}[OutputFile]${ANSI.Reset} ${outFile.slice(0,1000)}`);
       } catch (err: any) {
-        log.info(`${ANSI.Cyan}[OutputFile]${ANSI.Reset} could not read output file: ${err?.message ?? err}`);
+        iterLog.info(`${ANSI.Cyan}[OutputFile]${ANSI.Reset} could not read output file: ${err?.message ?? err}`);
       }
     } catch (errAny) {
       // swallow logging errors
@@ -273,8 +270,6 @@ export const loop = async (
         execResult,
         pathOutput,
         ...(signal ? { signal } : {}),
-        log: iterLog,
-        ANSI,
       });
       await trace.emit('validation.ok', iterCtx, {
         ok: Boolean(verdict?.ok),
@@ -289,7 +284,7 @@ export const loop = async (
 
     // Stop or advance if the execution is valid
     if (verdict?.ok) {
-      iterLog.info(`${ANSI.Green}[Agent]${ANSI.Reset} success for current task/iteration`);
+      iterLog.info(`success for current task/iteration`);
       await trace.emit('iteration.success', iterCtx, {
         score: typeof verdict?.score === 'number' ? verdict.score : undefined,
       });
