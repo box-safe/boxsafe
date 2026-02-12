@@ -19,6 +19,8 @@ async function run() {
     './tests/ports.test.ts',
     './tests/adapters.test.ts',
     './tests/extractCode.test.ts',
+    './tests/toolCalls.test.ts',
+    './tests/integration.test.ts',
     './tests/navigatorBoundary.test.ts',
     './tests/waterfall.test.ts',
     './tests/loadConfig.test.ts',

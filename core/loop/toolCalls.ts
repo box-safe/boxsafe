@@ -141,11 +141,6 @@ export function parseToolCallsFromMarkdown(markdown: string): ToolCallParseResul
     const fence = (m[1] ?? '').trim();
     logger.debug(`Found potential tool call: ${fence.substring(0, 100)}...`);
     
-    if (!fence.startsWith('{')) {
-      logger.debug('Skipping - does not start with {');
-      continue;
-    }
-
     try {
       const obj = JSON.parse(fence);
       logger.debug(`JSON parsed successfully: ${JSON.stringify(obj)}`);

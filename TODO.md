@@ -33,10 +33,13 @@ lembrete usar arquitetura Hexagonal no projeto
    - ✅ Checar se há erros silenciosos no toolDispatcher
    - **RESULTADO**: Ordem de execução perfeita! Navigator funciona, tool calls são processados corretamente
 
-4. **Testar manualmente o sistema de tools**
-   - Criar um teste unitário para parseToolCallsFromMarkdown
-   - Testar com diferentes formatos de json-tool
-   - Verificar se o problema é no parsing ou na execução
+4. **Testar manualmente o sistema de tools** ✅
+   - ✅ Criar teste unitário para parseToolCallsFromMarkdown
+   - ✅ Testar com diferentes formatos de json-tool
+   - ✅ Verificar se o problema é no parsing ou na execução
+   - ✅ **Criar testes de integração** para validar o fluxo completo
+   - ✅ **Corrigir bug**: remover filtro `!fence.startsWith('{')` que impedia parsing de JSON inválido
+   - **RESULTADO**: Sistema de tools está 100% funcional! Problema confirmado estar no prompt do agente
 
 5. **Analisar o sistema de prompts**
    - Verificar se o prompt está claro sobre como usar json-tool
