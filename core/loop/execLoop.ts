@@ -115,11 +115,14 @@ export const loop = async (
   const tasksManager: TasksManager | null = await initTasksManager(boxConfig);
 
   // Determine effective workspace (from arg, config or cwd) and initialize navigator
+  log.info(`${ANSI.Cyan}[InitNavigator]${ANSI.Reset} Initializing navigator...`);
   const { effectiveWorkspace, navigator } = initNavigator({
     ...(workspace ? { workspaceArg: workspace } : {}),
     ...(boxConfig.project?.workspace ? { configWorkspace: boxConfig.project.workspace } : {}),
     ...(injectedNavigator ? { injectedNavigator } : {}),
   });
+  
+  log.info(`${ANSI.Cyan}[InitNavigator]${ANSI.Reset} Navigator initialized: ${!!navigator ? 'YES' : 'NO'}, Workspace: ${effectiveWorkspace}`);
 
   const effectiveLimit = typeof limit === "number" ? limit : maxIterations;
   // feedback starts from tasks manager current task if available, otherwise initial prompt
@@ -197,6 +200,7 @@ export const loop = async (
     }
 
     // --- Tool call handling: detect JSON tool blocks in the generated markdown ---
+    iterLog.info(`${ANSI.Cyan}[ToolCalls]${ANSI.Reset} Processing tool calls from markdown...`);
     await dispatchToolCalls({
       markdown,
       navigator,
@@ -207,6 +211,7 @@ export const loop = async (
       traceEmit: trace.emit.bind(trace),
       traceCtx: iterCtx,
     });
+    iterLog.info(`${ANSI.Cyan}[ToolCalls]${ANSI.Reset} Tool call processing completed`);
 
     if (!codeBlocks || codeBlocks.length === 0) {
       feedback = "No code blocks were found. Generate valid code.";

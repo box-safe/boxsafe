@@ -1,3 +1,7 @@
+import { Logger } from '@core/util/logger';
+
+const logger = Logger.createModuleLogger('ToolCalls');
+
 export type ToolName = 'navigate' | 'versionControl';
 
 export type NavigateOp = 'list' | 'read' | 'write' | 'mkdir' | 'delete' | 'stat';
@@ -126,22 +130,44 @@ export function parseToolCallsFromMarkdown(markdown: string): ToolCallParseResul
   const calls: ToolCall[] = [];
   const errors: ToolCallParseError[] = [];
 
-  const jsonFenceRe = /```(?:json|json-tool)\s*([\s\S]*?)\s*```/g;
+  logger.debug(`Parsing markdown for tool calls (${markdown.length} chars)`);
+
+  // FIXED: Changed regex to specifically target json-tool blocks
+  // The old regex /```(?:json|json-tool)\s*([\s\S]*?)\s*```/g was capturing the wrong group
+  const jsonFenceRe = /```json-tool\s*([\s\S]*?)\s*```/g;
   let m: RegExpExecArray | null;
 
   while ((m = jsonFenceRe.exec(markdown)) !== null) {
     const fence = (m[1] ?? '').trim();
-    if (!fence.startsWith('{')) continue;
+    logger.debug(`Found potential tool call: ${fence.substring(0, 100)}...`);
+    
+    if (!fence.startsWith('{')) {
+      logger.debug('Skipping - does not start with {');
+      continue;
+    }
 
     try {
       const obj = JSON.parse(fence);
+      logger.debug(`JSON parsed successfully: ${JSON.stringify(obj)}`);
+      
       const parsed = parseOneToolCall(obj);
-      if (isParseError(parsed)) errors.push({ ...parsed, fence });
-      else calls.push(parsed);
+      
+      if (isParseError(parsed)) {
+        logger.warn(`Invalid tool call: ${parsed.error}`);
+        errors.push({ ...parsed, fence });
+      } else {
+        logger.info(`Valid tool call detected: ${parsed.tool}`);
+        calls.push(parsed);
+      }
     } catch (e: any) {
+      logger.error(`JSON parse failed: ${e?.message ?? String(e)}`);
       errors.push({ ok: false, error: `invalid JSON: ${e?.message ?? String(e)}`, fence });
     }
   }
 
+  logger.info(`Tool calls parsed: ${calls.length} valid, ${errors.length} errors`);
   return { ok: true, calls, errors };
 }
+
+// Export helper functions for reuse
+export { parseOneToolCall, isParseError };
