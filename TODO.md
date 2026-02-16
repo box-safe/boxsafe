@@ -1,58 +1,128 @@
-lembrete usar arquitetura Hexagonal no projeto 
+# BoxSafe TODO - Sistema Inteligente de Prompts
 
-# Tarefas de Debug - Sistema de Tools
+## Status Atual
+- ✅ Sistema de tools 100% funcional
+- ✅ Parsing de json-tool perfeito
+- ✅ Logging consistente implementado
+- ❌ Prompt atual incompleto (falta parâmetro `content`)
+- ❌ Sistema de prompts hardcoded (gambiarra funcional)
 
-## Problema Principal: Agente não consegue manipular arquivos via json-tool
+---
 
-### Status Atual
-- ✅ Agente gera json-tool corretamente
-- ✅ Sistema agora detecta/parsa o json-tool
-- ✅ Sistema de logging corrigido (sem console.log direto)
-- ❌ Arquivos não são criados (json-tool incompleto - falta content)
-- ❌ Tasks do TODO.md não são seguidas
+## 🎯 Objetivo Principal
+Implementar um sistema inteligente de gerenciamento de prompts que:
+- Categorize modelos por capacidade (LOW/MEDIUM/HIGH/EXCELLENT)
+- Otimize frequência de lembretes baseada no modelo
+- Reduza custos com providers
+- Melhore a experiência do usuário
 
-### Tasks de Debug Prioritárias
+---
 
-1. **Investigar o regex de parsing do json-tool** ✅
-   - ✅ Verificar se o regex `/```(?:json|json-tool)\s*([\s\S]*?)\s*```/g` está funcionando
-   - ✅ Testar isoladamente com o conteúdo gerado pelo agente
-   - ✅ Adicionar logs de debug para mostrar o que está sendo capturado
-   - **PROBLEMA ENCONTRADO**: O regex estava capturando o grupo errado devido ao `(?:json|json-tool)`
-   - **SOLUÇÃO**: Alterado para `/```json-tool\s*([\s\S]*?)\s*```/g` e criada função alternativa com remark
+## 📋 Tasks Organizadas
 
-2. **Debugar a função parseToolCallsFromMarkdown** ✅
-   - ✅ Adicionar console.log para mostrar o markdown input
-   - ✅ Verificar se o regex está encontrando os blocks
-   - ✅ Checar se o JSON.parse está funcionando
-   - ✅ **Corrigir sistema de logging** (remover console.log, usar @core/util/logger)
-   - **RESULTADO**: Função está perfeita! O problema é que o agente gera json-tool incompleto (falta `content`)
+### Phase 1: Fundação (Crítica)
+**1. Criar Sistema de Configuração de Modelos**
+- [ ] Criar arquivo `ai/modelConfig.ts` com perfis de modelos
+- [ ] Definir categorias: LOW (<8k), MEDIUM (8k-32k), HIGH (32k-128k), EXCELLENT (>128k)
+- [ ] Configurar frequências de lembrete por categoria
+- [ ] Adicionar metadados de custo por token
 
-3. **Investigar a ordem de execução no loop** ✅
-   - ✅ Verificar se dispatchToolCalls está sendo chamado antes da extração de código
-   - ✅ Confirmar se o navigator está inicializado corretamente
-   - ✅ Checar se há erros silenciosos no toolDispatcher
-   - **RESULTADO**: Ordem de execução perfeita! Navigator funciona, tool calls são processados corretamente
+**2. Implementar Estratégias de Prompt**
+- [ ] Criar prompts específicos por capacidade do modelo
+- [ ] Incluir exemplos completos com parâmetro `content`
+- [ ] Sistema de lembretes inteligentes
+- [ ] Validação de prompts
 
-4. **Testar manualmente o sistema de tools** ✅
-   - ✅ Criar teste unitário para parseToolCallsFromMarkdown
-   - ✅ Testar com diferentes formatos de json-tool
-   - ✅ Verificar se o problema é no parsing ou na execução
-   - ✅ **Criar testes de integração** para validar o fluxo completo
-   - ✅ **Corrigir bug**: remover filtro `!fence.startsWith('{')` que impedia parsing de JSON inválido
-   - **RESULTADO**: Sistema de tools está 100% funcional! Problema confirmado estar no prompt do agente
+**3. Integrar com Loop Principal**
+- [ ] Substituir prompt hardcoded pelo PromptManager
+- [ ] Detectar modelo automaticamente da configuração
+- [ ] Implementar sistema de contexto/usage tracking
+- [ ] Testar integração completa
 
-5. **Analisar o sistema de prompts**
-   - Verificar se o prompt está claro sobre como usar json-tool
-   - Testar diferentes variações do prompt
-   - Checar se o modelo entende a sintaxe correta
+### Phase 2: Inteligência (Otimização)
+**4. Sistema de Context Awareness**
+- [ ] Monitorar uso de contexto em tempo real
+- [ ] Trigger de lembretes baseado em threshold
+- [ ] Otimização de tokens por interação
+- [ ] Sistema de recuperação de erros
 
-6. **Investigar o Tasks Manager**
-   - Verificar se o TODO.md está sendo lido corretamente
-   - Checar se as tasks estão sendo processadas
-   - Debugar o sistema de avanço de tasks
+**5. Otimização de Custos**
+- [ ] Calcular custo por interação
+- [ ] Estratégias para reduzir tokens desnecessários
+- [ ] Balance entre qualidade e custo
+- [ ] Relatórios de uso
 
-# Tarefas Antigas
-15. fazer o modelo emitir um json-tool para poder controlar as tools 
+**6. Sistema de Aprendizado**
+- [ ] Detectar padrões de erros do modelo
+- [ ] Adaptar prompts baseado no histórico
+- [ ] Sistema de feedback automático
+- [ ] Melhoria contínua
+
+### Phase 3: Avançado (Futuro)
+**7. Interface de Configuração**
+- [ ] CLI para gerenciar modelos
+- [ ] Configuração via arquivo YAML/JSON
+- [ ] Validação de configurações
+- [ ] Documentação interativa
+
+**8. Monitoramento e Analytics**
+- [ ] Dashboard de uso de prompts
+- [ ] Métricas de performance
+- [ ] Alertas de anomalias
+- [ ] Sistema de logging avançado
+
+---
+
+## 🔧 Detalhes Técnicos
+
+### Arquivos a Criar:
+- `ai/modelConfig.ts` - Configurações dos modelos
+- `ai/promptManager.ts` - Sistema inteligente de prompts
+- `ai/promptStrategies.ts` - Estratégias por capacidade
+- `ai/contextTracker.ts` - Monitoramento de contexto
+- `ai/costOptimizer.ts` - Otimização de custos
+
+### Arquivos a Modificar:
+- `core/loop/execLoop.ts` - Integrar PromptManager
+- `boxsafe.config.json` - Adicionar configurações de modelo
+- `ai/prompts.ts` - Migrar para sistema estruturado
+
+### Critérios de Sucesso:
+- [ ] Prompt completo com parâmetro `content`
+- [ ] Sistema adaptável a diferentes modelos
+- [ ] Redução de 30% nos custos de API
+- [ ] Zero erros de json-tool incompleto
+- [ ] Documentação completa e testada
+
+---
+
+## 🚀 Próximos Passos Imediatos
+
+1. **Discussão**: Validar arquitetura proposta
+2. **Prioridade**: Phase 1 (fundação crítica)
+3. **Execução**: Implementar task por task com validação
+4. **Testes**: Garantir funcionamento em todos os modelos
+5. **Deploy**: Substituir sistema atual
+
+---
+
+## 📝 Notas
+- Manter compatibilidade com sistema atual
+- Implementar fallbacks para modelos desconhecidos
+- Considerar modelos locais vs API
+- Performance crítica para não impactar o loop
+
+Dynamic Tool Loading: Só injete as tools relevantes ao contexto atual
+Schema Compression: Para modelos fracos, use schemas simplificados
+  1. Início: Ensina TUDO (full system prompt + todas as tools)
+  2. Durante: Relembra periodicamente baseado em:
+    • Qualidade do modelo (tier)
+    • Frequência de uso das tools
+  3. Otimização: Prompts compactos para modelos fracos
+2. uso eficiente ded sistema de caching dos provaders integrar todas os plugs para economizar tokes oferecido pelo provider
+
+3. criação de (RAG)
+
 
 16. tool para busca inteligente, o modelo não sabe aonde um metodo ou função em expecifica ou qualquer coisa dentro do de um codigo esta mas ele consegue de forma inteligente so por um trecho do codigo achar 
 sem indicação externa 

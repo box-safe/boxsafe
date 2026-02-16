@@ -1,2 +1,2 @@
 
-// import keytar from 'keytar'; //  use to set, get, delet credentiale in windows  
+// import keytar from 'keytar'; // use to set, get, delete credentials in windows  

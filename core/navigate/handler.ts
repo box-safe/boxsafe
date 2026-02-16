@@ -55,7 +55,7 @@ export class NavigatorHandler {
     this.navigator = createNavigator({
       workspace,
       followSymlinks: false,
-      maxFileSize: 10 * 1024 * 1024, // 10MB
+      maxFileSize: 10 * 1024 * 1024, // 10MB default
     });
   }
 

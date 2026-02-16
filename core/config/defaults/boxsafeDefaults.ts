@@ -1,4 +1,4 @@
-// Tipos serão importados do loadConfig para evitar dependências externas
+// Types will be imported from loadConfig to avoid external dependencies
 
 export const DEFAULT_BOXSAFE_CONFIG = {
   project: {

@@ -20,7 +20,7 @@ export async function initSegments() {
   const routes: Record<string, any> = {
     loop: createLoopSegment(BSConfig),
     navigate: createNavigateSegment(BSConfig),
-    sandbox: null, // create
+    sandbox: null, // TODO: create
     model: {
       primary: BSConfig.model?.primary ?? null,
       fallback: BSConfig.model?.fallback ?? null,

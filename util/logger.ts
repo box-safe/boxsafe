@@ -1,8 +1,8 @@
 export enum LogLevel {
-    DEBUG = 0,
-    INFO = 1,
-    WARN = 2,
-    ERROR = 3,
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
 }
 
 export interface LogEntry {
@@ -13,11 +13,12 @@ export interface LogEntry {
 }
 
 export class Logger {
+    public contLogger: number;
     private static instance: Logger;
     private currentLevel: LogLevel;
     private moduleName: string;
 
-    // ANSI color codes - simplificado para melhor legibilidade
+    // ANSI color codes - simplified for better readability
     private static readonly COLORS = {
         RESET: '\x1b[0m',
         DEBUG: '\x1b[36m', // Cyan
@@ -33,9 +34,15 @@ export class Logger {
         [LogLevel.ERROR]: 'ERROR',
     };
 
-    constructor(moduleName: string = 'root', level: LogLevel = LogLevel.INFO) {
+    constructor(moduleName: string = 'root', level?: LogLevel) {
         this.moduleName = moduleName;
-        this.currentLevel = level;
+        this.contLogger = 0;
+        // Check for DEBUG environment variable
+        if (level === undefined) {
+            this.currentLevel = process.env.DEBUG === 'true' ? LogLevel.DEBUG : LogLevel.INFO;
+        } else {
+            this.currentLevel = level;
+        }
     }
 
     static getInstance(moduleName?: string, level?: LogLevel): Logger {
@@ -57,32 +64,39 @@ export class Logger {
         const levelName = Logger.LEVEL_NAMES[level];
         const color = Logger.COLORS[levelName as keyof typeof Logger.COLORS];
         const reset = Logger.COLORS.RESET;
-
-        return `${color}[${levelName}(${this.moduleName})]${reset} ${message}\n\n`;
+        if (this.contLogger === 0 ) {
+            return `\n\n${color}[${levelName}(${this.moduleName})]${reset} ${message}`;    
+        }
+        return `\n${color}[${levelName}(${this.moduleName})]${reset} ${message}`;   
+        
     }
 
     private log(level: LogLevel, message: string): void {
         if (level < this.currentLevel) {
             return;
         }
-
+        
         const formattedMessage = this.formatMessage(level, message);
         process.stdout.write(formattedMessage);
     }
 
     debug(message: string): void {
+        this.contLogger++;
         this.log(LogLevel.DEBUG, message);
     }
 
     info(message: string): void {
+        this.contLogger++;
         this.log(LogLevel.INFO, message);
     }
 
     warn(message: string): void {
+        this.contLogger++;
         this.log(LogLevel.WARN, message);
     }
 
     error(message: string): void {
+        this.contLogger++;
         this.log(LogLevel.ERROR, message);
     }
 
@@ -109,7 +123,7 @@ export class Logger {
 
     // Method to create a logger instance for a specific module
     static createModuleLogger(moduleName: string, level?: LogLevel): Logger {
-        return new Logger(moduleName, level);
+        return new Logger(`embedbox:${moduleName}`, level);
     }
 }
 

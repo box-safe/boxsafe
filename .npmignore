@@ -154,6 +154,11 @@ out.ts
 llama.cpp
 .npmrc
 
+# Lock files (should be in gitignore, not npmignore)
+*.lock
+flake.lock
+poetry.lock
+
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -234,15 +239,15 @@ config/local.*
 *.bak
 *.old
 
-# Lock files
-*.lock
-flake.lock
-poetry.lock
-
 # 🗑️ ARQUIVOS LIXO QUE PESAM NO PACOTE NPM
 
-# Documentação interna (mantém no git mas não vai para o npm)
-# README.md, LICENSE, CHANGELOG.md são mantidos
+# Documentação interna (não vai para o pacote)
+*.md
+!README.md
+!LICENSE
+!CHANGELOG.md
+
+# Todo e arquivos de desenvolvimento
 TODO.md
 DONE.md
 RUN.md
@@ -302,6 +307,11 @@ examples/
 demo/
 samples/
 
+# Documentação extensa
+docs/
+doc/
+documentation/
+
 # Scripts de desenvolvimento
 scripts/
 tools/
@@ -327,20 +337,52 @@ datasets/
 *.bin
 
 # Arquivos de cache e otimização
+.cache/
+*.cache
 .opt
 *.pyc
 *.pyo
 __pycache__/
 
 # Arquivos de sistema e temporários
+.DS_Store
+Thumbs.db
+ehthumbs.db
 Desktop.ini
 
 # Arquivos de editor e IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .vscode/settings.json
 .vscode/launch.json
 .vscode/extensions.json
 
+# Arquivos de lock e dependências (exceto essenciais)
+*.lock
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Arquivos de ambiente e configuração
+.env*
+*.local
+config/local.*
+
+# Arquivos de segurança e certificados
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.p7b
+
 # Arquivos de backup e versão antiga
+*.backup
+*.bak
+*.old
 *.orig
 *.rej
 
@@ -367,7 +409,15 @@ Desktop.ini
 *.wav
 
 # Arquivos de banco de dados
+*.db
+*.sqlite
+*.sqlite3
 *.mdb
 
-# Arquivos de segurança e certificados adicionais
-*.p7b
+# Arquivos de sistema operacional
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

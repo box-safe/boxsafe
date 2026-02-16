@@ -29,31 +29,31 @@ export type {
 } from '@core/navigate/types';
 
 // ============================================================================
-// PRIMARY PORTS - Interfaces para atores primários (CLI, Web, IDE, etc.)
+// PRIMARY PORTS - Interfaces for primary actors (CLI, Web, IDE, etc.)
 // ============================================================================
 
 /**
- * Port principal para execução do sistema - ponto de entrada para atores primários
- * Baseado no segment system existente
+ * Main port for system execution - entry point for primary actors
+ * Based on existing segment system
  */
 export interface ISystemExecutionPort {
   /**
-   * Executa um segmento específico do sistema
-   * @param segmentName Nome do segmento a ser executado
-   * @param args Argumentos para o segmento
-   * @returns Resultado da execução
+   * Executes a specific system segment
+   * @param segmentName Name of the segment to be executed
+   * @param args Arguments for the segment
+   * @returns Execution result
    */
   executeSegment(segmentName: string, args?: any): Promise<any>;
   
   /**
-   * Lista todos os segmentos disponíveis
-   * @returns Mapa de segmentos disponíveis
+   * Lists all available segments
+   * @returns Map of available segments
    */
   listSegments(): Record<string, SegmentInfo>;
 }
 
 /**
- * Informações sobre um segmento
+ * Information about a segment
  */
 export interface SegmentInfo {
   description: string;
@@ -62,27 +62,27 @@ export interface SegmentInfo {
 }
 
 /**
- * Port para configuração do sistema
- * Baseado no loadConfig existente
+ * Port for system configuration
+ * Based on existing loadConfig
  */
 export interface ISystemConfigurationPort {
   /**
-   * Carrega configurações do sistema
-   * @param configPath Caminho opcional para arquivo de configuração
-   * @returns Configurações carregadas
+   * Loads system configurations
+   * @param configPath Optional path to configuration file
+   * @returns Loaded configurations
    */
   loadConfiguration(configPath?: string): Promise<ConfigurationResult>;
   
   /**
-   * Valida configurações do sistema
-   * @param config Configurações a serem validadas
-   * @returns Resultado da validação
+   * Validates system configurations
+   * @param config Configurations to be validated
+   * @returns Validation result
    */
   validateConfiguration(config: BoxSafeConfig): Promise<ValidationResult>;
 }
 
 /**
- * Resultado do carregamento de configuração
+ * Configuration loading result
  */
 export interface ConfigurationResult {
   config: BoxSafeConfig;
@@ -90,7 +90,7 @@ export interface ConfigurationResult {
 }
 
 /**
- * Resultado da validação de configuração
+ * Configuration validation result
  */
 export interface ValidationResult {
   valid: boolean;
@@ -99,57 +99,56 @@ export interface ValidationResult {
 }
 
 // ============================================================================
-// SECONDARY PORTS - Interfaces para atores secundários (FileSystem, AI, Git, etc.)
+// SECONDARY PORTS - Interfaces for secondary actors (FileSystem, AI, Git, etc.)
 // ============================================================================
 
 /**
- * Port para navegação no sistema de arquivos
- * Baseado no módulo navigate existente
+ * Port for file system navigation
+ * Based on existing navigate module
  */
 export interface IFileSystemPort {
   /**
-   * Lista conteúdo de um diretório
-   */
+   * Lists directory contents
   listDirectory(path: string): Promise<any>;
   
   /**
-   * Lê conteúdo de um arquivo
+   * Reads file contents
    */
   readFile(path: string): Promise<any>;
   
   /**
-   * Escreve conteúdo em um arquivo
+   * Writes content to a file
    */
   writeFile(path: string, content: string, options?: any): Promise<any>;
   
   /**
-   * Cria um diretório
+   * Creates a directory
    */
   createDirectory(path: string, options?: any): Promise<any>;
   
   /**
-   * Remove arquivo ou diretório
+   * Removes file or directory
    */
   delete(path: string, options?: any): Promise<any>;
   
   /**
-   * Obtém metadados de um arquivo/diretório
+   * Gets metadata of a file/directory
    */
   getMetadata(path: string): Promise<any>;
 }
 
 /**
- * Port para interação com modelos de IA
- * Baseado na configuração de model existente
+ * Port for AI model interaction
+ * Based on existing model configuration
  */
 export interface IAIModelPort {
   /**
-   * Envia prompt para o modelo
+   * Sends prompt to the model
    */
   sendPrompt(prompt: string, options?: any): Promise<any>;
   
   /**
-   * Configura modelo a ser utilizado
+   * Configures model to be used
    */
   configureModel(config: {
     provider: LService;
@@ -159,12 +158,11 @@ export interface IAIModelPort {
 }
 
 /**
- * Port para controle de versão (Git)
- * Baseado no módulo versionControl existente
+ * Port for version control (Git)
  */
 export interface IVersionControlPort {
   /**
-   * Executa comando git
+   * Executes Git command
    */
   executeGitCommand(command: string, args?: string[]): Promise<any>;
   

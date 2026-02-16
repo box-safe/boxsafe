@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_BOXSAFE_CONFIG } from '@core/config/defaults';
 
-// Tipos locais para manter independência do core
+// Local types to maintain core independence
 export interface BoxSafeConfig {
   project?: {
     workspace?: string;
